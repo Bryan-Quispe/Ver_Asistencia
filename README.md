@@ -1,81 +1,79 @@
-# Consulta de Asistencia ESPE - Arquitectura Separada
+# 📚 Monitor de Asistencia ESPE
 
-Tu aplicación ya está dividida en **Frontend** y **Backend**. Aquí están las instrucciones para levantarlos.
+Sistema web para monitorear automáticamente la asistencia de cursos de la ESPE con alertas inteligentes.
+
+## 🚀 Características
+
+- ✅ Monitoreo automático cada 24 horas
+- 🚨 Alertas cuando la asistencia < 85%
+- ⚠️ Advertencias para asistencia 85-90%
+- 📊 Dashboard con vista de todas las materias
+- 💾 Almacenamiento local en el navegador
+- 🎨 Interfaz moderna y responsive
+
+## 🛠️ Tecnologías
+
+- **Backend:** Node.js + Express
+- **Frontend:** HTML + CSS + JavaScript (Vanilla)
+- **Deploy:** Koyeb (Backend) + Vercel (Frontend)
 
 ## 📁 Estructura
 
 ```
 .VER ASISTENCIA/
-├── backend/
+├── backend/          # API REST
 │   ├── server.js
 │   ├── package.json
-│   └── node_modules/ (después de npm install)
-├── frontend/
+│   └── Dockerfile
+├── frontend/         # Interfaz web
 │   ├── index.html
 │   ├── package.json
-│   └── node_modules/ (después de npm install)
-└── README.md
+│   └── vercel.json
+└── DEPLOY-GUIDE.md  # Guía de despliegue
 ```
 
-## 🚀 Cómo levantar la aplicación
+## 🚀 Despliegue en Producción
+
+Ver [DEPLOY-GUIDE.md](DEPLOY-GUIDE.md) para instrucciones completas de despliegue.
+
+### Resumen rápido:
+
+1. **Backend (Koyeb):** Desplegar con Dockerfile
+2. **Frontend (Vercel):** Importar desde GitHub
+3. **Configurar:** Actualizar URL del backend en frontend
+
+## 💻 Desarrollo Local
 
 ### 1️⃣ Backend (API REST)
 
 ```bash
-# Ir a la carpeta backend
 cd backend
-
-# Instalar dependencias
 npm install
-
-# Iniciar el servidor (en puerto 3000)
-npm start
+npm start  # Puerto 3000
 ```
 
-✅ El backend estará disponible en: **http://localhost:3000**
+✅ Backend disponible en: **http://localhost:3000**
 
 ### 2️⃣ Frontend (Interfaz web)
 
-En otra terminal:
-
 ```bash
-# Ir a la carpeta frontend
 cd frontend
-
-# Instalar dependencias
 npm install
-
-# Iniciar el servidor (en puerto 8080)
-npm start
+npm start  # Puerto 8080
 ```
 
-✅ El frontend estará disponible en: **http://localhost:8080**
+✅ Frontend disponible en: **http://localhost:8080**
 
-## 📝 Notas importantes
+## 📝 Notas
 
-- **Backend**: Corre en puerto `3000` y expone el endpoint `/api/consultar-curso`
-- **Frontend**: Corre en puerto `8080` y se conecta automáticamente al backend
-- El frontend apunta a `http://localhost:3000` para las consultas
-- Ambos tienen soporte CORS habilitado
+- **Backend**: Puerto `3000` - Endpoint `/api/consultar-curso`
+- **Frontend**: Puerto `8080` - Se conecta al backend
+- CORS habilitado para desarrollo y producción
 
-## 🔧 Variables de entorno (opcional)
+## 📄 Licencia
 
-Para cambiar puertos, crea un archivo `.env` en cada carpeta:
+MIT
 
-**backend/.env**
-```
-PORT=3000
-```
+## 👤 Autor
 
-**frontend/.env**
-```
-VITE_API_URL=http://localhost:3000
-```
-
-## 📱 ¿Todo funcionando?
-
-1. ✅ Backend corriendo (verás: "🚀 Servidor corriendo en puerto 3000")
-2. ✅ Frontend corriendo (se abrirá en el navegador)
-3. ✅ Intenta hacer una consulta ingresando un NRC
-
-¡Listo! Tu aplicación está separada y lista para escalar 🎉
+ESPE Student
