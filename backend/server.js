@@ -63,6 +63,41 @@ app.post('/api/consultar-curso', async (req, res) => {
   }
 });
 
+// Endpoint para obtener todos los cursos registrados
+app.get('/api/todos-cursos', async (req, res) => {
+  try {
+    const response = await fetch(
+      `https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=&pageMaxSize=100&pageOffset=0&sortColumn=courseReferenceNumber&sortDirection=asc`,
+      {
+        method: 'GET',
+        headers: {
+          'Cookie': `JSESSIONID=${JSESSIONID_DEFAULT}`,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Referer': 'https://sss.espe.edu.ec/StudentSelfService/'
+        }
+      }
+    );
+
+    const data = await response.json();
+    
+    // Filtrar solo las secciones válidas (que tengan horario real)
+    if (data.success && data.data) {
+      data.data = data.data.filter(seccion => {
+        const tieneHorario = seccion.schedule.some(dia => dia !== 'false');
+        return tieneHorario;
+      });
+      data.totalCount = data.data.length;
+    }
+    
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
