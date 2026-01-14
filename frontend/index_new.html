@@ -242,7 +242,12 @@
       const nrc = document.getElementById('nrc-input').value.trim();
 
       if (!nrc) {
-        mostrarError('⚠️ Ingresa un NRC');
+        mostrarError('⚠️ Ingresa un NRC válido');
+        return;
+      }
+
+      if (nrc.length < 4) {
+        mostrarError('⚠️ El NRC debe tener al menos 4 caracteres');
         return;
       }
 
@@ -253,19 +258,24 @@
         const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nrc })
+          body: JSON.stringify({ nrc: nrc.toUpperCase() })
         });
 
         const data = await response.json();
 
-        if (!data.success || !data.data || data.data.length === 0) {
+        if (!data.success) {
+          mostrarError(`❌ ${data.error || 'Error al consultar el NRC'}`);
+          return;
+        }
+
+        if (!data.data || data.data.length === 0) {
           mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}`);
           return;
         }
 
         mostrarResultados(data.data);
       } catch (error) {
-        mostrarError(`❌ Error: ${error.message}`);
+        mostrarError(`❌ Error de red: ${error.message}`);
       }
     }
 

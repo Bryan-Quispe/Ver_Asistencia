@@ -12,19 +12,38 @@ async function consultarNrcDirecto(nrc) {
   try {
     console.log(`🔍 Consultando NRC: ${nrc}`);
     
-    const response = await fetch(
-      `https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=${encodeURIComponent(nrc)}&pageMaxSize=10&pageOffset=0&sortColumn=courseReferenceNumber&sortDirection=asc`,
-      {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'es-ES,es;q=0.8'
-        }
-      }
-    );
+    if (!nrc || nrc.trim() === '') {
+      throw new Error('NRC no puede estar vacío');
+    }
 
-    const data = await response.json();
+    const url = `https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=${encodeURIComponent(nrc)}&pageMaxSize=10&pageOffset=0&sortColumn=courseReferenceNumber&sortDirection=asc`;
+    
+    console.log('📡 URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'es-ES,es;q=0.8'
+      }
+    });
+
+    const contentType = response.headers.get('content-type');
+    console.log('📊 Content-Type:', contentType);
+    console.log('📊 Status:', response.status);
+
+    // Leer el body
+    const text = await response.text();
+    console.log('📄 Response (primeros 200 chars):', text.substring(0, 200));
+
+    // Intentar parsear como JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error('ESPE devolvió una respuesta inválida (no es JSON). Es posible que el servidor esté fuera de servicio o el NRC sea incorrecto.');
+    }
     
     if (!data.success) {
       throw new Error(data.error || 'Error en la respuesta de ESPE');
@@ -33,7 +52,7 @@ async function consultarNrcDirecto(nrc) {
     // Retornar todos los datos tal como vienen
     return data;
   } catch (error) {
-    console.error('Error en consultarNrcDirecto:', error.message);
+    console.error('❌ Error en consultarNrcDirecto:', error.message);
     throw error;
   }
 }
