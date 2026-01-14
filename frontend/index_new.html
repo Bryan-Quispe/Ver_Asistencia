@@ -252,7 +252,7 @@
       }
 
       const resultado = document.getElementById('resultado');
-      resultado.innerHTML = '<div class="loading">🔍 Buscando...</div>';
+      resultado.innerHTML = '<div class="loading">🔍 Buscando en ESPE...</div>';
 
       try {
         const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
@@ -264,18 +264,18 @@
         const data = await response.json();
 
         if (!data.success) {
-          mostrarError(`❌ ${data.error || 'Error al consultar el NRC'}`);
+          mostrarError(`❌ ${data.error}\n\n💡 Verifica que el NRC sea correcto o intenta de nuevo más tarde.`);
           return;
         }
 
         if (!data.data || data.data.length === 0) {
-          mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}`);
+          mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}\n\n💡 Verifica que el NRC sea correcto.`);
           return;
         }
 
         mostrarResultados(data.data);
       } catch (error) {
-        mostrarError(`❌ Error de red: ${error.message}`);
+        mostrarError(`❌ Error de conexión: ${error.message}\n\n💡 Verifica tu conexión a internet.`);
       }
     }
 
