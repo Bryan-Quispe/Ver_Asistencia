@@ -1,24 +1,67 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 3000; // Puerto dinámico para Render
+const PORT = process.env.PORT || 3000;
 
-// JSESSIONID por defecto (lo cambiarás cuando expire)
-const JSESSIONID_DEFAULT = '1BCEC82882AE73B84EC9D5EC89716609';
+// Variables globales
+let JSESSIONID = null;
+let JSESSIONID_TIMESTAMP = null;
+const JSESSIONID_EXPIRY = 15 * 60 * 1000; // 15 minutos
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Función para obtener JSESSIONID válido
+async function obtenerJSESSIONID() {
+  try {
+    // Si ya tenemos uno reciente, usarlo
+    if (JSESSIONID && JSESSIONID_TIMESTAMP && (Date.now() - JSESSIONID_TIMESTAMP) < JSESSIONID_EXPIRY) {
+      return JSESSIONID;
+    }
+
+    console.log('🔄 Obteniendo nuevo JSESSIONID...');
+    
+    const response = await fetch(
+      'https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=&pageMaxSize=1&pageOffset=0',
+      {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Referer': 'https://sss.espe.edu.ec/StudentSelfService/'
+        },
+        redirect: 'follow'
+      }
+    );
+
+    // Obtener JSESSIONID de las cookies
+    const setCookie = response.headers.get('set-cookie');
+    if (setCookie && setCookie.includes('JSESSIONID')) {
+      JSESSIONID = setCookie.split('JSESSIONID=')[1].split(';')[0];
+      JSESSIONID_TIMESTAMP = Date.now();
+      console.log('✅ JSESSIONID obtenido correctamente');
+      return JSESSIONID;
+    }
+
+    throw new Error('No se pudo obtener JSESSIONID del servidor ESPE');
+  } catch (error) {
+    console.error('❌ Error obteniendo JSESSIONID:', error.message);
+    throw error;
+  }
+}
+
 // Función reutilizable para consultar secciones
 async function consultarSeccionesPorNRC(nrc) {
   try {
+    const sessionId = await obtenerJSESSIONID();
+    
     const response = await fetch(
       `https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=${nrc}&pageMaxSize=10&pageOffset=0&sortColumn=courseReferenceNumber&sortDirection=asc`,
       {
         method: 'GET',
         headers: {
-          'Cookie': `JSESSIONID=${JSESSIONID_DEFAULT}`,
+          'Cookie': `JSESSIONID=${sessionId}`,
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json, text/plain, */*',
           'Referer': 'https://sss.espe.edu.ec/StudentSelfService/'
@@ -49,6 +92,7 @@ app.post('/api/consultar-curso', async (req, res) => {
 
   if (!nrc) {
     return res.status(400).json({
+      success: false,
       error: 'Falta el parámetro NRC'
     });
   }
@@ -58,6 +102,7 @@ app.post('/api/consultar-curso', async (req, res) => {
     res.json(resultado);
   } catch (error) {
     res.status(500).json({
+      success: false,
       error: error.message
     });
   }
@@ -66,12 +111,14 @@ app.post('/api/consultar-curso', async (req, res) => {
 // Endpoint para obtener todos los cursos registrados
 app.get('/api/todos-cursos', async (req, res) => {
   try {
+    const sessionId = await obtenerJSESSIONID();
+    
     const response = await fetch(
       `https://sss.espe.edu.ec/StudentSelfService/ssb/studentAttendanceTracking/getRegisteredSections?filterText=&pageMaxSize=100&pageOffset=0&sortColumn=courseReferenceNumber&sortDirection=asc`,
       {
         method: 'GET',
         headers: {
-          'Cookie': `JSESSIONID=${JSESSIONID_DEFAULT}`,
+          'Cookie': `JSESSIONID=${sessionId}`,
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json, text/plain, */*',
           'Referer': 'https://sss.espe.edu.ec/StudentSelfService/'
@@ -93,13 +140,20 @@ app.get('/api/todos-cursos', async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({
+      success: false,
       error: error.message
     });
   }
 });
 
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', sessionId: JSESSIONID ? 'Válido' : 'Sin inicializar' });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📌 JSESSIONID actual: ${JSESSIONID_DEFAULT}`);
+  // Obtener JSESSIONID al iniciar
+  obtenerJSESSIONID().catch(err => console.error('Error inicial:', err));
 });
