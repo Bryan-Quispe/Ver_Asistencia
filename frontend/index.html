@@ -286,8 +286,8 @@
     <div class="header">
       <h1>📚 Asistencia ESPE - Período Actual</h1>
       <div class="header-info">
-        <div class="status-badge">✅ Actualización cada hora</div>
-        <div class="tiempo-actualizacion" id="tiempo-proxima">Próxima: --:--</div>
+        <div class="status-badge" id="status-badge">🔐 Inicia sesión</div>
+        <div class="tiempo-actualizacion" id="tiempo-proxima">--:--</div>
       </div>
     </div>
 
@@ -310,6 +310,22 @@
       </div>
     </div>
 
+    <!-- PANEL DE LOGIN -->
+    <div id="login-panel" style="display: none; margin-bottom: 30px;">
+      <div style="background: rgba(76, 208, 225, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #4dd0e1;">
+        <h2 style="margin-bottom: 15px; color: #4dd0e1;">🔐 Login ESPE</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="usuario-input" placeholder="Usuario ESPE..." style="padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
+          <input type="password" id="contrasena-input" placeholder="Contraseña..." style="padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
+          <button class="btn-principal" onclick="hacerLogin()" style="width: 100%;">Ingresar</button>
+        </div>
+        <p style="margin-top: 10px; font-size: 12px; color: #90a4ae;">💡 Tu contraseña solo se usa para autenticarte con ESPE, nunca se almacena</p>
+      </div>
+    </div>
+
+    <!-- PANEL DE CURSOS (oculto hasta login) -->
+    <div id="cursos-panel" style="display: none;">
+
     <div class="controles">
       <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
         <input type="text" id="nrc-input" placeholder="Ingresa NRC..." style="flex: 1; min-width: 150px; padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
@@ -318,11 +334,13 @@
       <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;">
         <button class="btn-principal" onclick="actualizarAhora()" style="flex: 1;">🔄 Actualizar Ahora</button>
         <button class="btn-principal" onclick="limpiarTodos()" style="flex: 1;">🗑️ Limpiar Todo</button>
+        <button class="btn-principal" onclick="cerrarSesion()" style="flex: 1; background: #ff7070;">🚪 Cerrar Sesión</button>
       </div>
     </div>
 
     <div class="tabla-container">
       <div id="contenido"></div>
+    </div>
     </div>
   </div>
 
@@ -332,18 +350,97 @@
     const LIMITE_ASISTENCIA = 85;
 
     let cursosAgregados = [];
+    let usuarioAutenticado = false;
 
     // ==================== INICIALIZACIÓN ====================
     document.addEventListener('DOMContentLoaded', () => {
+      mostrarPanelLogin();
       cargarCursosGuardados();
-      mostrarTabla();
-      iniciarActualizacionAutomatica();
       
-      // Enter key en el input
+      // Enter key en los inputs
+      document.getElementById('usuario-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('contrasena-input').focus();
+      });
+      document.getElementById('contrasena-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') hacerLogin();
+      });
       document.getElementById('nrc-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') agregarCurso();
       });
     });
+
+    // ==================== GESTIÓN DE SESIÓN ====================
+    function mostrarPanelLogin() {
+      document.getElementById('login-panel').style.display = 'block';
+      document.getElementById('cursos-panel').style.display = 'none';
+      usuarioAutenticado = false;
+      actualizarStatusBadge();
+    }
+
+    function mostrarPanelCursos() {
+      document.getElementById('login-panel').style.display = 'none';
+      document.getElementById('cursos-panel').style.display = 'block';
+      usuarioAutenticado = true;
+      actualizarStatusBadge();
+      mostrarTabla();
+      iniciarActualizacionAutomatica();
+    }
+
+    function actualizarStatusBadge() {
+      const badge = document.getElementById('status-badge');
+      if (usuarioAutenticado) {
+        badge.textContent = '✅ Sesión activa';
+        badge.style.background = 'rgba(129, 199, 132, 0.2)';
+        badge.style.borderColor = '#81c784';
+        badge.style.color = '#81c784';
+      } else {
+        badge.textContent = '🔐 Inicia sesión';
+        badge.style.background = 'rgba(76, 208, 225, 0.2)';
+        badge.style.borderColor = '#4dd0e1';
+        badge.style.color = '#4dd0e1';
+      }
+    }
+
+    async function hacerLogin() {
+      const usuario = document.getElementById('usuario-input').value.trim();
+      const contrasena = document.getElementById('contrasena-input').value.trim();
+
+      if (!usuario || !contrasena) {
+        alert('⚠️ Ingresa usuario y contraseña');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, contrasena })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          alert('❌ ' + data.error);
+          return;
+        }
+
+        alert('✅ Login exitoso');
+        document.getElementById('usuario-input').value = '';
+        document.getElementById('contrasena-input').value = '';
+        mostrarPanelCursos();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    function cerrarSesion() {
+      if (confirm('¿Cerrar sesión?')) {
+        usuarioAutenticado = false;
+        cursosAgregados = [];
+        localStorage.removeItem('cursosAgregados');
+        mostrarPanelLogin();
+      }
+    }
 
     // ==================== CARGAR CURSOS GUARDADOS ====================
     function cargarCursosGuardados() {
@@ -359,6 +456,11 @@
 
     // ==================== AGREGAR CURSO ====================
     async function agregarCurso() {
+      if (!usuarioAutenticado) {
+        alert('❌ Debes iniciar sesión primero');
+        return;
+      }
+
       const input = document.getElementById('nrc-input');
       const nrc = input.value.trim().toUpperCase();
 
@@ -396,6 +498,8 @@
           nrc: nrc,
           codigo: curso.subjectCode,
           nombre: curso.subjectDesc,
+          percentage: curso.percentage,
+          missed: curso.missed,
           ultima_actualizacion: new Date().toISOString()
         });
 
@@ -444,18 +548,16 @@
             errores++;
             cursosActualizados.push({
               ...curso,
-              percentage: 0,
-              missed: 0,
-              error: true
+              error: true,
+              errorMsg: data.error || 'Error desconocido'
             });
           }
         } catch (error) {
           errores++;
           cursosActualizados.push({
             ...curso,
-            percentage: 0,
-            missed: 0,
-            error: true
+            error: true,
+            errorMsg: error.message
           });
         }
       }
@@ -465,7 +567,7 @@
       generarTabla();
 
       if (errores > 0) {
-        console.warn(`⚠️ ${errores} cursos no actualizados`);
+        console.warn(`⚠️ ${errores} cursos con error`);
       }
     }
 
@@ -503,7 +605,7 @@
               <td><strong>${curso.codigo}</strong></td>
               <td>${curso.nombre}</td>
               <td><strong>${curso.nrc}</strong></td>
-              <td colspan="2" style="text-align: center; color: #ff7070;">❌ Error al actualizar</td>
+              <td colspan="2" style="text-align: center; color: #ff7070;">❌ ${curso.errorMsg}</td>
               <td style="text-align: center;">
                 <button class="btn-monitorear" onclick="eliminarCurso('${curso.nrc}')" style="background: #ff7070;">🗑️ Eliminar</button>
               </td>
@@ -573,11 +675,17 @@
     }
 
     // ==================== ACTUALIZACIÓN AUTOMÁTICA ====================
+    let intervaloActualizacion = null;
+
     function iniciarActualizacionAutomatica() {
       // Actualizar cada hora
-      setInterval(() => {
-        console.log('🔄 Actualizando cursos automáticamente...');
-        actualizarTodosCursos();
+      if (intervaloActualizacion) clearInterval(intervaloActualizacion);
+      
+      intervaloActualizacion = setInterval(() => {
+        if (usuarioAutenticado) {
+          console.log('🔄 Actualizando cursos automáticamente...');
+          actualizarTodosCursos();
+        }
       }, INTERVALO_ACTUALIZACION);
 
       actualizarTiempoProximo();
