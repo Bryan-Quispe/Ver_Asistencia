@@ -311,9 +311,14 @@
     </div>
 
     <div class="controles">
-      <button class="btn-principal" onclick="cargarTabla()">🔄 Actualizar Ahora</button>
-      <button class="btn-principal" onclick="mostrarMonitoreadas()">👁️ Ver Monitoreadas</button>
-      <button class="btn-principal" onclick="limpiarMonitor()">🗑️ Limpiar Monitor</button>
+      <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+        <input type="text" id="nrc-input" placeholder="Ingresa NRC..." style="flex: 1; min-width: 150px; padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
+        <button class="btn-principal" onclick="agregarCurso()">➕ Agregar</button>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;">
+        <button class="btn-principal" onclick="actualizarAhora()" style="flex: 1;">🔄 Actualizar Ahora</button>
+        <button class="btn-principal" onclick="limpiarTodos()" style="flex: 1;">🗑️ Limpiar Todo</button>
+      </div>
     </div>
 
     <div class="tabla-container">
@@ -326,39 +331,155 @@
     const INTERVALO_ACTUALIZACION = 60 * 60 * 1000; // 1 hora
     const LIMITE_ASISTENCIA = 85;
 
-    let todosCursos = [];
+    let cursosAgregados = [];
 
     // ==================== INICIALIZACIÓN ====================
     document.addEventListener('DOMContentLoaded', () => {
-      cargarTabla();
+      cargarCursosGuardados();
+      mostrarTabla();
       iniciarActualizacionAutomatica();
+      
+      // Enter key en el input
+      document.getElementById('nrc-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') agregarCurso();
+      });
     });
 
-    // ==================== CARGAR TABLA ====================
-    async function cargarTabla() {
-      const contenido = document.getElementById('contenido');
-      contenido.innerHTML = '<div class="loading">📡 Cargando todos tus cursos...</div>';
-
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/todos-cursos`);
-        const data = await response.json();
-
-        if (!data.success || data.totalCount === 0) {
-          contenido.innerHTML = '<div class="error">❌ No se encontraron cursos registrados</div>';
-          return;
-        }
-
-        todosCursos = data.data;
-        generarTabla(todosCursos);
-        actualizarEstadisticas();
-      } catch (error) {
-        contenido.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    // ==================== CARGAR CURSOS GUARDADOS ====================
+    function cargarCursosGuardados() {
+      const guardados = localStorage.getItem('cursosAgregados');
+      if (guardados) {
+        cursosAgregados = JSON.parse(guardados);
       }
     }
 
-    function generarTabla(cursos) {
+    function guardarCursos() {
+      localStorage.setItem('cursosAgregados', JSON.stringify(cursosAgregados));
+    }
+
+    // ==================== AGREGAR CURSO ====================
+    async function agregarCurso() {
+      const input = document.getElementById('nrc-input');
+      const nrc = input.value.trim().toUpperCase();
+
+      if (!nrc) {
+        alert('⚠️ Ingresa un NRC');
+        return;
+      }
+
+      if (cursosAgregados.some(c => c.nrc === nrc)) {
+        alert('❌ Este NRC ya está agregado');
+        input.value = '';
+        return;
+      }
+
       const contenido = document.getElementById('contenido');
-      const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
+      contenido.innerHTML = '<div class="loading">🔍 Buscando curso...</div>';
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nrc })
+        });
+
+        const data = await response.json();
+
+        if (!data.success || data.totalCount === 0) {
+          alert('❌ No se encontró ese NRC');
+          mostrarTabla();
+          return;
+        }
+
+        const curso = data.data[0];
+        cursosAgregados.push({
+          nrc: nrc,
+          codigo: curso.subjectCode,
+          nombre: curso.subjectDesc,
+          ultima_actualizacion: new Date().toISOString()
+        });
+
+        guardarCursos();
+        input.value = '';
+        alert('✅ Curso agregado');
+        actualizarTodosCursos();
+      } catch (error) {
+        alert(`❌ Error: ${error.message}`);
+        mostrarTabla();
+      }
+    }
+
+    // ==================== ACTUALIZAR TODOS LOS CURSOS ====================
+    async function actualizarTodosCursos() {
+      if (cursosAgregados.length === 0) {
+        mostrarTabla();
+        return;
+      }
+
+      const contenido = document.getElementById('contenido');
+      contenido.innerHTML = '<div class="loading">📡 Actualizando cursos...</div>';
+
+      const cursosActualizados = [];
+      let errores = 0;
+
+      for (const curso of cursosAgregados) {
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nrc: curso.nrc })
+          });
+
+          const data = await response.json();
+
+          if (data.success && data.totalCount > 0) {
+            const datoCurso = data.data[0];
+            cursosActualizados.push({
+              ...curso,
+              percentage: datoCurso.percentage,
+              missed: datoCurso.missed,
+              ultima_actualizacion: new Date().toISOString()
+            });
+          } else {
+            errores++;
+            cursosActualizados.push({
+              ...curso,
+              percentage: 0,
+              missed: 0,
+              error: true
+            });
+          }
+        } catch (error) {
+          errores++;
+          cursosActualizados.push({
+            ...curso,
+            percentage: 0,
+            missed: 0,
+            error: true
+          });
+        }
+      }
+
+      cursosAgregados = cursosActualizados;
+      guardarCursos();
+      generarTabla();
+
+      if (errores > 0) {
+        console.warn(`⚠️ ${errores} cursos no actualizados`);
+      }
+    }
+
+    function mostrarTabla() {
+      if (cursosAgregados.length === 0) {
+        document.getElementById('contenido').innerHTML = '<div class="loading">👉 Agrega un NRC para comenzar</div>';
+        actualizarEstadisticas([]);
+        return;
+      }
+      generarTabla();
+    }
+
+    function generarTabla() {
+      const contenido = document.getElementById('contenido');
 
       let html = `
         <table>
@@ -375,27 +496,36 @@
           <tbody>
       `;
 
-      cursos.forEach(curso => {
+      cursosAgregados.forEach((curso) => {
+        if (curso.error) {
+          html += `
+            <tr style="opacity: 0.6;">
+              <td><strong>${curso.codigo}</strong></td>
+              <td>${curso.nombre}</td>
+              <td><strong>${curso.nrc}</strong></td>
+              <td colspan="2" style="text-align: center; color: #ff7070;">❌ Error al actualizar</td>
+              <td style="text-align: center;">
+                <button class="btn-monitorear" onclick="eliminarCurso('${curso.nrc}')" style="background: #ff7070;">🗑️ Eliminar</button>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
         const claseAsistencia = curso.percentage >= LIMITE_ASISTENCIA ? 'asistencia-alta' : 
                                curso.percentage >= 70 ? 'asistencia-media' : 'asistencia-baja';
         
         const icon = curso.percentage >= LIMITE_ASISTENCIA ? '✅' : curso.percentage >= 70 ? '⚠️' : '🚨';
-        
-        const nrc = curso.courseReferenceNumber;
-        const estaMonitoreada = monitoreadas.includes(nrc);
-        const btnClass = estaMonitoreada ? 'agregado' : '';
-        const btnTexto = estaMonitoreada ? '✓ Monitoreada' : '➕ Monitorear';
-        const btnDisabled = estaMonitoreada ? 'disabled' : '';
 
         html += `
           <tr>
-            <td><strong>${curso.subjectCode}</strong></td>
-            <td>${curso.subjectDesc}</td>
-            <td><strong>${nrc}</strong></td>
+            <td><strong>${curso.codigo}</strong></td>
+            <td>${curso.nombre}</td>
+            <td><strong>${curso.nrc}</strong></td>
             <td style="text-align: center;"><span class="${claseAsistencia}">${icon} ${curso.percentage}%</span></td>
             <td style="text-align: center;">${curso.missed}</td>
             <td style="text-align: center;">
-              <button class="btn-monitorear ${btnClass}" onclick="agregarAlMonitor('${nrc}')" ${btnDisabled}>${btnTexto}</button>
+              <button class="btn-monitorear" onclick="eliminarCurso('${curso.nrc}')" style="background: #ff7070;">🗑️ Eliminar</button>
             </td>
           </tr>
         `;
@@ -407,61 +537,34 @@
       `;
 
       contenido.innerHTML = html;
+      actualizarEstadisticas(cursosAgregados);
     }
 
-    // ==================== MONITOREO ====================
-    function agregarAlMonitor(nrc) {
-      let monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
-      
-      if (monitoreadas.includes(nrc)) {
-        alert('Esta materia ya está siendo monitoreada');
-        return;
+    // ==================== ELIMINAR CURSO ====================
+    function eliminarCurso(nrc) {
+      if (confirm(`¿Eliminar este curso?`)) {
+        cursosAgregados = cursosAgregados.filter(c => c.nrc !== nrc);
+        guardarCursos();
+        alert('✅ Curso eliminado');
+        mostrarTabla();
       }
-
-      monitoreadas.push(nrc);
-      localStorage.setItem('materiasMonitoreadas', JSON.stringify(monitoreadas));
-      
-      // Guardar datos de la materia
-      const curso = todosCursos.find(c => c.courseReferenceNumber === nrc);
-      if (curso) {
-        localStorage.setItem(`materia_${nrc}`, JSON.stringify({
-          seccion: curso,
-          fecha: new Date().toISOString()
-        }));
-      }
-
-      alert('✅ Materia agregada al monitor');
-      generarTabla(todosCursos);
     }
 
-    function mostrarMonitoreadas() {
-      const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
-      
-      if (monitoreadas.length === 0) {
-        alert('❌ No tienes materias monitoreadas aún');
-        return;
-      }
-
-      const filtrados = todosCursos.filter(c => monitoreadas.includes(c.courseReferenceNumber));
-      generarTabla(filtrados);
-    }
-
-    function limpiarMonitor() {
-      if (confirm('¿Eliminar TODAS las materias monitoreadas?')) {
-        const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
-        monitoreadas.forEach(nrc => localStorage.removeItem(`materia_${nrc}`));
-        localStorage.removeItem('materiasMonitoreadas');
-        alert('✅ Monitor limpiado');
-        generarTabla(todosCursos);
+    function limpiarTodos() {
+      if (confirm('¿Eliminar TODOS los cursos?')) {
+        cursosAgregados = [];
+        guardarCursos();
+        alert('✅ Todo limpiado');
+        mostrarTabla();
       }
     }
 
     // ==================== ESTADÍSTICAS ====================
-    function actualizarEstadisticas() {
-      const total = todosCursos.length;
-      const buenos = todosCursos.filter(c => c.percentage >= LIMITE_ASISTENCIA).length;
-      const riesgo = todosCursos.filter(c => c.percentage >= 70 && c.percentage < LIMITE_ASISTENCIA).length;
-      const criticos = todosCursos.filter(c => c.percentage < 70).length;
+    function actualizarEstadisticas(cursos) {
+      const total = cursos.length;
+      const buenos = cursos.filter(c => !c.error && c.percentage >= LIMITE_ASISTENCIA).length;
+      const riesgo = cursos.filter(c => !c.error && c.percentage >= 70 && c.percentage < LIMITE_ASISTENCIA).length;
+      const criticos = cursos.filter(c => !c.error && c.percentage < 70).length;
 
       document.getElementById('total-cursos').textContent = total;
       document.getElementById('cursos-buenos').textContent = buenos;
@@ -471,10 +574,10 @@
 
     // ==================== ACTUALIZACIÓN AUTOMÁTICA ====================
     function iniciarActualizacionAutomatica() {
-      // Cargar cada hora
+      // Actualizar cada hora
       setInterval(() => {
-        console.log('🔄 Actualizando tabla automáticamente...');
-        cargarTabla();
+        console.log('🔄 Actualizando cursos automáticamente...');
+        actualizarTodosCursos();
       }, INTERVALO_ACTUALIZACION);
 
       actualizarTiempoProximo();
@@ -492,6 +595,10 @@
       const minutos = String(proximaHora.getMinutes()).padStart(2, '0');
 
       document.getElementById('tiempo-proxima').textContent = `Próxima: ${horas}:${minutos}`;
+    }
+
+    async function actualizarAhora() {
+      await actualizarTodosCursos();
     }
   </script>
 </body>
