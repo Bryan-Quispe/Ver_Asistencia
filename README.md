@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📚 Monitor de Asistencia ESPE
 
 Sistema web para monitorear automáticamente la asistencia de cursos de la ESPE con alertas inteligentes.
@@ -77,3 +78,6 @@ MIT
 ## 👤 Autor
 
 ESPE Student
+=======
+hola jijija
+>>>>>>> bba4f57d2173e67c45dc49eb962cf81b8be0dfe5
