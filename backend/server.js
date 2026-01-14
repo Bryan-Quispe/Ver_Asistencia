@@ -10,9 +10,6 @@ const JSESSIONID_DEFAULT = '1BCEC82882AE73B84EC9D5EC89716609';
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos (el HTML)
-app.use(express.static('public'));
-
 // Función reutilizable para consultar secciones
 async function consultarSeccionesPorNRC(nrc) {
   try {

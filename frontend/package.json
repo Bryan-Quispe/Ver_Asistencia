@@ -1,0 +1,8 @@
+{
+  "name": "consulta-asistencia-espe-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para consultar asistencia ESPE",
+  "scripts": {
+    "start": "npx http-server . -p 8080 -o"
+  }
+}
