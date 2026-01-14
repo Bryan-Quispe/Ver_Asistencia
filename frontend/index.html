@@ -474,8 +474,9 @@
     // ==================== CONFIGURACIÓN ====================
     const BACKEND_URL = 'https://cooperative-tierney-losmascapitos-480b8f15.koyeb.app';
     const LIMITE_ASISTENCIA = 85; // Alerta si es menor a 85%
-    const INTERVALO_VERIFICACION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
-    const VERIFICACION_INICIAL = 5 * 60 * 1000; // 5 minutos para la primera verificación
+    const HORA_VERIFICACION = 7; // 7:30 AM
+    const MINUTO_VERIFICACION = 30;
+    const ZONA_HORARIA_ECUADOR = 'America/Guayaquil'; // UTC-5
 
     // ==================== VARIABLES GLOBALES ====================
     const formulario = document.getElementById('formulario');
@@ -586,13 +587,14 @@
     }
 
     function eliminarDelMonitor(nrc) {
-      if (confirm(`¿Eliminar NRC ${nrc} del monitor?`)) {
+      if (confirm(`¿Eliminar NRC ${nrc} del monitor diario?\n\nYa no recibirás alertas de esta materia.`)) {
         let materias = cargarMonitor();
         materias = materias.filter(m => m !== nrc);
         localStorage.setItem('materiasMonitoreadas', JSON.stringify(materias));
         localStorage.removeItem(`materia_${nrc}`);
         renderizarMonitor();
         actualizarAlertas();
+        alert('✅ Materia removida del monitor');
       }
     }
 
@@ -609,15 +611,70 @@
 
     // ==================== VERIFICACIÓN AUTOMÁTICA ====================
 
-    function iniciarVerificacionAutomatica() {
-      // Primera verificación después de 5 minutos
-      setTimeout(verificarTodasLasMaterias, VERIFICACION_INICIAL);
+    function calcularProximaVerificacion() {
+      // Obtener hora actual en Ecuador (UTC-5)
+      const opciones = {
+        timeZone: ZONA_HORARIA_ECUADOR,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      };
+      
+      const formateador = new Intl.DateTimeFormat('es-EC', opciones);
+      const ahora = new Date();
+      
+      // Crear fecha para 7:30 AM hoy en Ecuador
+      const proximaVerificacion = new Date(ahora);
+      proximaVerificacion.setHours(HORA_VERIFICACION, MINUTO_VERIFICACION, 0, 0);
+      
+      // Si ya pasó las 7:30 AM, programar para mañana
+      if (ahora >= proximaVerificacion) {
+        proximaVerificacion.setDate(proximaVerificacion.getDate() + 1);
+      }
+      
+      // Calcular diferencia en milisegundos
+      const diferencia = proximaVerificacion - ahora;
+      
+      return {
+        tiempo: diferencia,
+        fecha: proximaVerificacion,
+        ahora: ahora
+      };
+    }
 
-      // Luego cada 24 horas
-      intervaloVerificacion = setInterval(verificarTodasLasMaterias, INTERVALO_VERIFICACION);
+    function iniciarVerificacionAutomatica() {
+      const { tiempo, fecha } = calcularProximaVerificacion();
+      
+      console.log('⏰ Próxima verificación programada para:', fecha.toLocaleString('es-EC'));
+      
+      // Programar la primera verificación
+      setTimeout(() => {
+        verificarTodasLasMaterias();
+        
+        // Luego programar para que se repita cada 24 horas
+        setInterval(verificarTodasLasMaterias, 24 * 60 * 60 * 1000);
+      }, tiempo);
       
       monitorStatusSpan.textContent = '✅ Activo';
       monitorStatusSpan.style.color = '#4caf50';
+      
+      // Mostrar hora de próxima verificación
+      mostrarProximaVerificacion();
+    }
+
+    function mostrarProximaVerificacion() {
+      const { fecha } = calcularProximaVerificacion();
+      const horaFormato = fecha.toLocaleString('es-EC', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+      
+      // Actualizar el tooltip del monitor
+      monitorStatusSpan.title = `Próxima verificación a las ${horaFormato} (Ecuador)`;
     }
 
     async function verificarTodasLasMaterias() {
@@ -848,6 +905,7 @@
     // ==================== ACTUALIZACIÓN EN TIEMPO REAL ====================
     setInterval(() => {
       actualizarFechaVerificacion();
+      mostrarProximaVerificacion();
     }, 60000); // Actualizar cada minuto
   </script>
 </body>
