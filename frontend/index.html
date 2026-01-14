@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitor de Asistencia ESPE</title>
+  <title>Asistencia ESPE - Período Actual</title>
   <style>
     * {
       margin: 0;
@@ -19,15 +19,9 @@
       color: #e0e0e0;
     }
 
-    .main-container {
+    .container {
       max-width: 1400px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 20px;
-    }
-
-    .container {
       background: #16213e;
       padding: 30px;
       border-radius: 20px;
@@ -35,500 +29,388 @@
       border: 1px solid #2d3561;
     }
 
-    h1 {
-      color: #4dd0e1;
-      margin-bottom: 30px;
-      text-align: center;
-      font-size: 28px;
-    }
-
-    h2 {
-      color: #4dd0e1;
-      margin-bottom: 20px;
-      font-size: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    /* Alertas y Notificaciones */
-    .alerts-container {
-      margin-bottom: 30px;
-    }
-
-    .alert {
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(-100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    .alert-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .alert-content {
-      flex: 1;
-    }
-
-    .alert-title {
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
-
-    .alert-danger {
-      background: #fee;
-      color: #c33;
-      border-left: 4px solid #c33;
-    }
-
-    .alert-warning {
-      background: #fff8e1;
-      color: #856404;
-      border-left: 4px solid #ff9800;
-    }
-
-    .alert-success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-left: 4px solid #4caf50;
-    }
-
-    .alert-close {
-      background: none;
-      border: none;
-      color: inherit;
-      cursor: pointer;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    /* Monitor Section */
-    .monitor-section {
-      background: #f0f4ff;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-
-    .monitor-header {
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
     }
 
-    .monitor-title {
-      color: #667eea;
-      font-weight: 600;
-      font-size: 16px;
+    h1 {
+      color: #4dd0e1;
+      font-size: 28px;
     }
 
-    .monitor-status {
+    .header-info {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      background: rgba(76, 208, 225, 0.2);
+      color: #4dd0e1;
+      padding: 10px 15px;
+      border-radius: 20px;
       font-size: 12px;
-      color: #666;
+      font-weight: 600;
+      border: 1px solid #4dd0e1;
     }
 
-    .monitored-course {
-      background: white;
-      padding: 12px;
+    .tiempo-actualizacion {
+      background: rgba(255, 152, 0, 0.2);
+      color: #ffb74d;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #ff9800;
+    }
+
+    .tabla-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #0f1f35;
+      border: 1px solid #2d3561;
       border-radius: 8px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-left: 3px solid #667eea;
+      overflow: hidden;
+    }
+
+    thead {
+      background: linear-gradient(135deg, #152a45 0%, #1a3555 100%);
+      border-bottom: 2px solid #4dd0e1;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      padding: 18px 15px;
+      text-align: left;
+      color: #4dd0e1;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #2d3561;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    tbody tr {
       transition: all 0.2s;
     }
 
-    .monitored-course:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transform: translateX(2px);
+    tbody tr:hover {
+      background: rgba(77, 208, 225, 0.1);
     }
 
-    .monitored-course.danger {
-      border-left-color: #c33;
-      background: #fff5f5;
-    }
-
-    .monitored-course.warning {
-      border-left-color: #ff9800;
-      background: #fffbf0;
-    }
-
-    .course-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .course-name {
+    .asistencia-alta {
+      color: #81c784;
       font-weight: 600;
-      color: #333;
-      font-size: 13px;
-      word-wrap: break-word;
-      white-space: normal;
-      line-height: 1.3;
-      margin-bottom: 4px;
     }
 
-    .course-percentage {
+    .asistencia-media {
+      color: #ffb74d;
+      font-weight: 600;
+    }
+
+    .asistencia-baja {
+      color: #ff7070;
+      font-weight: 600;
+    }
+
+    .btn-monitorear {
+      background: #4dd0e1;
+      color: #0f1f35;
+      padding: 8px 14px;
       font-size: 12px;
-      color: #666;
-      margin-top: 3px;
-      line-height: 1.4;
-    }
-
-    .course-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .btn-small {
-      background: #667eea;
-      border: none;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 13px;
-      border-radius: 4px;
-      transition: all 0.2s;
-      color: white;
       font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      max-width: 130px;
     }
 
-    .btn-small:hover {
-      background: #5568d3;
+    .btn-monitorear:hover {
+      background: #26c6da;
       transform: scale(1.05);
     }
 
-    .btn-small:active {
+    .btn-monitorear:active {
       transform: scale(0.95);
     }
 
-    .monitored-empty {
-      text-align: center;
-      color: #999;
-      padding: 15px;
-      font-size: 14px;
+    .btn-monitorear.agregado {
+      background: #81c784;
+      cursor: default;
     }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #555;
-      font-weight: 600;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 15px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.3s;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    button {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 14px;
-    }
-
-    #resultado {
-      margin-top: 30px;
-    }
-
-    .seccion {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      border-left: 4px solid #667eea;
-    }
-
-    .seccion h3 {
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .info-item:last-child {
-      border-bottom: none;
-    }
-
-    .label {
-      font-weight: 600;
-      color: #555;
-    }
-
-    .value {
-      color: #333;
-    }
-
-    .error {
-      background: #fee;
-      color: #c33;
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #c33;
+    .btn-monitorear.agregado:hover {
+      transform: none;
     }
 
     .loading {
       text-align: center;
-      color: #667eea;
+      padding: 40px;
+      color: #4dd0e1;
       font-size: 18px;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .badge-success {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .badge-warning {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .badge-danger {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    /* Historial */
-    .historial-item {
-      background: #f8f9fa;
-      padding: 15px;
+    .error {
+      background: rgba(244, 67, 54, 0.2);
+      color: #ff7070;
+      padding: 20px;
       border-radius: 8px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: all 0.3s;
-      border-left: 3px solid #667eea;
+      border-left: 4px solid #f44336;
+      text-align: center;
     }
 
-    .historial-item:hover {
-      background: #e9ecef;
-      transform: translateX(5px);
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
     }
 
-    .historial-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .stat-card {
+      background: linear-gradient(135deg, #0d1a3a 0%, #1a2d4a 100%);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #2d3561;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #4dd0e1;
       margin-bottom: 5px;
     }
 
-    .historial-titulo {
-      font-weight: 600;
-      color: #333;
-      font-size: 14px;
+    .stat-label {
+      font-size: 12px;
+      color: #90a4ae;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .historial-nrc {
-      color: #667eea;
-      font-weight: 600;
-    }
-
-    .historial-info {
+    .controles {
       display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #666;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
-    .historial-fecha {
-      color: #999;
-    }
-
-    .historial-vacio {
-      text-align: center;
-      color: #999;
-      padding: 20px;
-      font-style: italic;
-    }
-
-    .delete-btn {
-      background: #dc3545;
-      color: white;
+    button.btn-principal {
+      background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+      color: #0f1f35;
+      padding: 12px 24px;
       border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 12px;
+      transition: all 0.2s;
+      width: auto;
     }
 
-    .delete-btn:hover {
-      background: #c82333;
+    button.btn-principal:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
     }
 
-    @media (max-width: 968px) {
-      .main-container {
-        grid-template-columns: 1fr;
+    button.btn-principal:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
       }
-      
-      .monitored-course {
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .header {
         flex-direction: column;
         align-items: flex-start;
       }
-      
-      .course-actions {
+
+      .header-info {
         width: 100%;
-        margin-top: 10px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+      }
+
+      .btn-monitorear {
+        max-width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .controles {
+        flex-direction: column;
+      }
+
+      button.btn-principal {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Sidebar: Monitor y Control -->
-    <div class="container">
-      <h2>👁️ Monitor Diario</h2>
-      
-      <!-- Monitoreo en tiempo real -->
-      <div class="monitor-section">
-        <div class="monitor-header">
-          <span class="monitor-title">Materias Monitoreadas</span>
-          <span class="monitor-status" id="monitor-status">Inactivo</span>
-        </div>
-        <div id="monitored-list"></div>
-      </div>
-
-      <!-- Agregar nueva materia al monitor -->
-      <div class="form-group">
-        <label for="nrc-monitor">Agregar al Monitor:</label>
-        <input type="text" id="nrc-monitor" placeholder="NRC" style="margin-bottom: 8px;">
-        <button onclick="agregarAlMonitor()" style="width: 100%; margin-bottom: 10px;">➕ Monitorear</button>
-      </div>
-
-      <button class="btn-secondary" onclick="limpiarMonitor()">🗑️ Limpiar Monitor</button>
-      
-      <!-- Últimas alertas -->
-      <h2 style="margin-top: 30px;">📢 Última Verificación</h2>
-      <div style="background: #f5f5f5; padding: 10px; border-radius: 8px; font-size: 12px; color: #666; text-align: center;">
-        <span id="ultima-verificacion">Nunca</span>
+  <div class="container">
+    <div class="header">
+      <h1>📚 Asistencia ESPE - Período Actual</h1>
+      <div class="header-info">
+        <div class="status-badge">✅ Actualización cada hora</div>
+        <div class="tiempo-actualizacion" id="tiempo-proxima">Próxima: --:--</div>
       </div>
     </div>
 
-    <!-- Contenido principal -->
-    <div class="container">
-      <h1>📚 Monitor de Asistencia ESPE</h1>
-      
-      <!-- Alertas de advertencia -->
-      <div class="alerts-container" id="alerts-container"></div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="total-cursos">0</div>
+        <div class="stat-label">Total de Cursos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="cursos-buenos" style="color: #81c784;">0</div>
+        <div class="stat-label">Buena Asistencia (≥85%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="cursos-riesgo" style="color: #ffb74d;">0</div>
+        <div class="stat-label">En Riesgo (70-85%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="cursos-criticos" style="color: #ff7070;">0</div>
+        <div class="stat-label">Crítico (<70%)</div>
+      </div>
+    </div>
 
-      <!-- Formulario de consulta manual -->
-      <form id="formulario">
-        <h2>🔍 Consulta Manual</h2>
-        <div class="form-group">
-          <label for="nrc">NRC del Curso:</label>
-          <input type="text" id="nrc" placeholder="Ej: 27917" required>
-        </div>
-        <button type="submit">Consultar Ahora</button>
-      </form>
+    <div class="controles">
+      <button class="btn-principal" onclick="cargarTabla()">🔄 Actualizar Ahora</button>
+      <button class="btn-principal" onclick="mostrarMonitoreadas()">👁️ Ver Monitoreadas</button>
+      <button class="btn-principal" onclick="limpiarMonitor()">🗑️ Limpiar Monitor</button>
+    </div>
 
-      <!-- Resultados -->
-      <div id="resultado"></div>
+    <div class="tabla-container">
+      <div id="contenido"></div>
     </div>
   </div>
 
   <script>
-    // ==================== CONFIGURACIÓN ====================
     const BACKEND_URL = 'https://cooperative-tierney-losmascapitos-480b8f15.koyeb.app';
-    const LIMITE_ASISTENCIA = 85; // Alerta si es menor a 85%
-    const HORA_VERIFICACION = 7; // 7:30 AM
-    const MINUTO_VERIFICACION = 30;
-    const ZONA_HORARIA_ECUADOR = 'America/Guayaquil'; // UTC-5
+    const INTERVALO_ACTUALIZACION = 60 * 60 * 1000; // 1 hora
+    const LIMITE_ASISTENCIA = 85;
 
-    // ==================== VARIABLES GLOBALES ====================
-    const formulario = document.getElementById('formulario');
-    const resultadoDiv = document.getElementById('resultado');
-    const alertasDiv = document.getElementById('alerts-container');
-    const monitoredListDiv = document.getElementById('monitored-list');
-    const monitorStatusSpan = document.getElementById('monitor-status');
-    const ultimaVerificacionSpan = document.getElementById('ultima-verificacion');
-
-    let intervaloVerificacion = null;
+    let todosCursos = [];
 
     // ==================== INICIALIZACIÓN ====================
     document.addEventListener('DOMContentLoaded', () => {
-      cargarMonitor();
-      renderizarMonitor();
-      iniciarVerificacionAutomatica();
+      cargarTabla();
+      iniciarActualizacionAutomatica();
     });
 
-    formulario.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nrc = document.getElementById('nrc').value.trim();
-      consultarCurso(nrc);
-    });
+    // ==================== CARGAR TABLA ====================
+    async function cargarTabla() {
+      const contenido = document.getElementById('contenido');
+      contenido.innerHTML = '<div class="loading">📡 Cargando todos tus cursos...</div>';
 
-    // ==================== FUNCIONES DE MONITOREO ====================
-    
-    function agregarAlMonitor() {
-      const nrc = document.getElementById('nrc-monitor').value.trim();
-      
-      if (!nrc) {
-        alert('Por favor ingresa un NRC');
-        return;
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/todos-cursos`);
+        const data = await response.json();
+
+        if (!data.success || data.totalCount === 0) {
+          contenido.innerHTML = '<div class="error">❌ No se encontraron cursos registrados</div>';
+          return;
+        }
+
+        todosCursos = data.data;
+        generarTabla(todosCursos);
+        actualizarEstadisticas();
+      } catch (error) {
+        contenido.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
       }
+    }
 
+    function generarTabla(cursos) {
+      const contenido = document.getElementById('contenido');
+      const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre de la Materia</th>
+              <th>NRC</th>
+              <th style="text-align: center;">Asistencia</th>
+              <th style="text-align: center;">Faltas</th>
+              <th style="text-align: center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      cursos.forEach(curso => {
+        const claseAsistencia = curso.percentage >= LIMITE_ASISTENCIA ? 'asistencia-alta' : 
+                               curso.percentage >= 70 ? 'asistencia-media' : 'asistencia-baja';
+        
+        const icon = curso.percentage >= LIMITE_ASISTENCIA ? '✅' : curso.percentage >= 70 ? '⚠️' : '🚨';
+        
+        const nrc = curso.courseReferenceNumber;
+        const estaMonitoreada = monitoreadas.includes(nrc);
+        const btnClass = estaMonitoreada ? 'agregado' : '';
+        const btnTexto = estaMonitoreada ? '✓ Monitoreada' : '➕ Monitorear';
+        const btnDisabled = estaMonitoreada ? 'disabled' : '';
+
+        html += `
+          <tr>
+            <td><strong>${curso.subjectCode}</strong></td>
+            <td>${curso.subjectDesc}</td>
+            <td><strong>${nrc}</strong></td>
+            <td style="text-align: center;"><span class="${claseAsistencia}">${icon} ${curso.percentage}%</span></td>
+            <td style="text-align: center;">${curso.missed}</td>
+            <td style="text-align: center;">
+              <button class="btn-monitorear ${btnClass}" onclick="agregarAlMonitor('${nrc}')" ${btnDisabled}>${btnTexto}</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      contenido.innerHTML = html;
+    }
+
+    // ==================== MONITOREO ====================
+    function agregarAlMonitor(nrc) {
       let monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
       
       if (monitoreadas.includes(nrc)) {
@@ -539,395 +421,78 @@
       monitoreadas.push(nrc);
       localStorage.setItem('materiasMonitoreadas', JSON.stringify(monitoreadas));
       
-      document.getElementById('nrc-monitor').value = '';
-      cargarMonitor();
-      renderizarMonitor();
-      
-      // Verificar inmediatamente la nueva materia
-      verificarMateria(nrc);
+      // Guardar datos de la materia
+      const curso = todosCursos.find(c => c.courseReferenceNumber === nrc);
+      if (curso) {
+        localStorage.setItem(`materia_${nrc}`, JSON.stringify({
+          seccion: curso,
+          fecha: new Date().toISOString()
+        }));
+      }
+
+      alert('✅ Materia agregada al monitor');
+      generarTabla(todosCursos);
     }
 
-    function cargarMonitor() {
-      const materiasMonitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
-      return materiasMonitoreadas;
-    }
-
-    function renderizarMonitor() {
-      const materias = cargarMonitor();
+    function mostrarMonitoreadas() {
+      const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
       
-      if (materias.length === 0) {
-        monitoredListDiv.innerHTML = '<div class="monitored-empty">📭 Agrega materias para monitorear</div>';
+      if (monitoreadas.length === 0) {
+        alert('❌ No tienes materias monitoreadas aún');
         return;
       }
 
-      let html = '';
-      materias.forEach(nrc => {
-        const datos = JSON.parse(localStorage.getItem(`materia_${nrc}`) || '{}');
-        
-        if (!datos.seccion) {
-          html += `
-            <div class="monitored-course">
-              <div class="course-info">
-                <div class="course-name">NRC: <strong>${nrc}</strong></div>
-                <div class="course-percentage">Cargando información...</div>
-              </div>
-              <div class="course-actions">
-                <button class="btn-small" onclick="verificarMateria('${nrc}')" title="Verificar ahora">🔄</button>
-                <button class="btn-small" onclick="eliminarDelMonitor('${nrc}')" title="Eliminar materia">✕</button>
-              </div>
-            </div>
-          `;
-          return;
-        }
-
-        const clase = datos.seccion.percentage < LIMITE_ASISTENCIA ? 'danger' : 
-                     datos.seccion.percentage < 90 ? 'warning' : '';
-        
-        const icon = datos.seccion.percentage < LIMITE_ASISTENCIA ? '⚠️' : '✅';
-
-        html += `
-          <div class="monitored-course ${clase}">
-            <div class="course-info">
-              <div class="course-name">${icon} ${datos.seccion.subjectCode} - ${datos.seccion.subjectDesc}</div>
-              <div class="course-percentage">
-                NRC: <strong>${nrc}</strong>
-              </div>
-              <div class="course-percentage" style="margin-top: 5px; color: #333; font-weight: 600;">
-                Asistencia: <strong>${datos.seccion.percentage}%</strong> | Faltas: ${datos.seccion.missed}
-              </div>
-            </div>
-            <div class="course-actions">
-              <button class="btn-small" onclick="verificarMateria('${nrc}')" title="Verificar ahora">🔄</button>
-              <button class="btn-small" onclick="eliminarDelMonitor('${nrc}')" title="Eliminar materia">✕</button>
-            </div>
-          </div>
-        `;
-      });
-
-      monitoredListDiv.innerHTML = html;
-    }
-
-    function eliminarDelMonitor(nrc) {
-      if (confirm(`¿Eliminar NRC ${nrc} del monitor diario?\n\nYa no recibirás alertas de esta materia.`)) {
-        let materias = cargarMonitor();
-        materias = materias.filter(m => m !== nrc);
-        localStorage.setItem('materiasMonitoreadas', JSON.stringify(materias));
-        localStorage.removeItem(`materia_${nrc}`);
-        renderizarMonitor();
-        actualizarAlertas();
-        alert('✅ Materia removida del monitor');
-      }
+      const filtrados = todosCursos.filter(c => monitoreadas.includes(c.courseReferenceNumber));
+      generarTabla(filtrados);
     }
 
     function limpiarMonitor() {
-      if (confirm('¿Eliminar TODAS las materias del monitor?')) {
-        const materias = cargarMonitor();
-        materias.forEach(nrc => localStorage.removeItem(`materia_${nrc}`));
+      if (confirm('¿Eliminar TODAS las materias monitoreadas?')) {
+        const monitoreadas = JSON.parse(localStorage.getItem('materiasMonitoreadas') || '[]');
+        monitoreadas.forEach(nrc => localStorage.removeItem(`materia_${nrc}`));
         localStorage.removeItem('materiasMonitoreadas');
-        localStorage.removeItem('ultimaVerificacion');
-        renderizarMonitor();
-        actualizarAlertas();
+        alert('✅ Monitor limpiado');
+        generarTabla(todosCursos);
       }
     }
 
-    // ==================== VERIFICACIÓN AUTOMÁTICA ====================
+    // ==================== ESTADÍSTICAS ====================
+    function actualizarEstadisticas() {
+      const total = todosCursos.length;
+      const buenos = todosCursos.filter(c => c.percentage >= LIMITE_ASISTENCIA).length;
+      const riesgo = todosCursos.filter(c => c.percentage >= 70 && c.percentage < LIMITE_ASISTENCIA).length;
+      const criticos = todosCursos.filter(c => c.percentage < 70).length;
 
-    function calcularProximaVerificacion() {
-      // Obtener hora actual en Ecuador (UTC-5)
-      const opciones = {
-        timeZone: ZONA_HORARIA_ECUADOR,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      };
-      
-      const formateador = new Intl.DateTimeFormat('es-EC', opciones);
+      document.getElementById('total-cursos').textContent = total;
+      document.getElementById('cursos-buenos').textContent = buenos;
+      document.getElementById('cursos-riesgo').textContent = riesgo;
+      document.getElementById('cursos-criticos').textContent = criticos;
+    }
+
+    // ==================== ACTUALIZACIÓN AUTOMÁTICA ====================
+    function iniciarActualizacionAutomatica() {
+      // Cargar cada hora
+      setInterval(() => {
+        console.log('🔄 Actualizando tabla automáticamente...');
+        cargarTabla();
+      }, INTERVALO_ACTUALIZACION);
+
+      actualizarTiempoProximo();
+      setInterval(actualizarTiempoProximo, 60000); // Actualizar cada minuto
+    }
+
+    function actualizarTiempoProximo() {
       const ahora = new Date();
-      
-      // Crear fecha para 7:30 AM hoy en Ecuador
-      const proximaVerificacion = new Date(ahora);
-      proximaVerificacion.setHours(HORA_VERIFICACION, MINUTO_VERIFICACION, 0, 0);
-      
-      // Si ya pasó las 7:30 AM, programar para mañana
-      if (ahora >= proximaVerificacion) {
-        proximaVerificacion.setDate(proximaVerificacion.getDate() + 1);
-      }
-      
-      // Calcular diferencia en milisegundos
-      const diferencia = proximaVerificacion - ahora;
-      
-      return {
-        tiempo: diferencia,
-        fecha: proximaVerificacion,
-        ahora: ahora
-      };
+      const proximaHora = new Date(ahora);
+      proximaHora.setHours(proximaHora.getHours() + 1);
+      proximaHora.setMinutes(0);
+      proximaHora.setSeconds(0);
+
+      const horas = String(proximaHora.getHours()).padStart(2, '0');
+      const minutos = String(proximaHora.getMinutes()).padStart(2, '0');
+
+      document.getElementById('tiempo-proxima').textContent = `Próxima: ${horas}:${minutos}`;
     }
-
-    function iniciarVerificacionAutomatica() {
-      const { tiempo, fecha } = calcularProximaVerificacion();
-      
-      console.log('⏰ Próxima verificación programada para:', fecha.toLocaleString('es-EC'));
-      
-      // Programar la primera verificación
-      setTimeout(() => {
-        verificarTodasLasMaterias();
-        
-        // Luego programar para que se repita cada 24 horas
-        setInterval(verificarTodasLasMaterias, 24 * 60 * 60 * 1000);
-      }, tiempo);
-      
-      monitorStatusSpan.textContent = '✅ Activo';
-      monitorStatusSpan.style.color = '#4caf50';
-      
-      // Mostrar hora de próxima verificación
-      mostrarProximaVerificacion();
-    }
-
-    function mostrarProximaVerificacion() {
-      const { fecha } = calcularProximaVerificacion();
-      const horaFormato = fecha.toLocaleString('es-EC', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      });
-      
-      // Actualizar el tooltip del monitor
-      monitorStatusSpan.title = `Próxima verificación a las ${horaFormato} (Ecuador)`;
-    }
-
-    async function verificarTodasLasMaterias() {
-      const materias = cargarMonitor();
-      
-      if (materias.length === 0) return;
-
-      monitorStatusSpan.textContent = '🔄 Verificando...';
-      monitorStatusSpan.style.color = '#ff9800';
-
-      for (const nrc of materias) {
-        await verificarMateria(nrc);
-      }
-
-      // Guardar timestamp de última verificación
-      localStorage.setItem('ultimaVerificacion', new Date().toISOString());
-      actualizarAlertas();
-      renderizarMonitor();
-
-      monitorStatusSpan.textContent = '✅ Activo';
-      monitorStatusSpan.style.color = '#4caf50';
-      
-      actualizarFechaVerificacion();
-    }
-
-    async function verificarMateria(nrc) {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nrc })
-        });
-
-        const data = await response.json();
-
-        if (data.success && data.totalCount > 0) {
-          const seccion = data.data[0];
-          localStorage.setItem(`materia_${nrc}`, JSON.stringify({
-            seccion: seccion,
-            fecha: new Date().toISOString()
-          }));
-        }
-      } catch (error) {
-        console.error(`Error verificando NRC ${nrc}:`, error);
-      }
-    }
-
-    // ==================== MANEJO DE ALERTAS ====================
-
-    function actualizarAlertas() {
-      const materias = cargarMonitor();
-      const alertas = [];
-
-      materias.forEach(nrc => {
-        const datos = JSON.parse(localStorage.getItem(`materia_${nrc}`) || '{}');
-        
-        if (!datos.seccion) return;
-
-        if (datos.seccion.percentage < LIMITE_ASISTENCIA) {
-          alertas.push({
-            tipo: 'danger',
-            icon: '🚨',
-            title: 'ATENCIÓN: Asistencia Baja',
-            message: `${datos.seccion.subjectCode} - ${datos.seccion.percentage}% asistencia (${datos.seccion.missed} faltas). ¡Por debajo del ${LIMITE_ASISTENCIA}%!`,
-            nrc: nrc
-          });
-        } else if (datos.seccion.percentage < 90) {
-          alertas.push({
-            tipo: 'warning',
-            icon: '⚠️',
-            title: 'Asistencia en Riesgo',
-            message: `${datos.seccion.subjectCode} - ${datos.seccion.percentage}% asistencia. Acercándose al límite.`,
-            nrc: nrc
-          });
-        }
-      });
-
-      renderizarAlertas(alertas);
-    }
-
-    function renderizarAlertas(alertas) {
-      if (alertas.length === 0) {
-        alertasDiv.innerHTML = '<div class="alert alert-success"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">¡Todo Bien!</div><p>Todas tus materias tienen buena asistencia</p></div></div>';
-        return;
-      }
-
-      let html = '';
-      alertas.forEach((alerta, index) => {
-        html += `
-          <div class="alert alert-${alerta.tipo}">
-            <div class="alert-icon">${alerta.icon}</div>
-            <div class="alert-content">
-              <div class="alert-title">${alerta.title}</div>
-              <p>${alerta.message}</p>
-            </div>
-            <button class="alert-close" onclick="cerrarAlerta(this)">✕</button>
-          </div>
-        `;
-      });
-
-      alertasDiv.innerHTML = html;
-    }
-
-    function cerrarAlerta(btn) {
-      btn.parentElement.remove();
-    }
-
-    function actualizarFechaVerificacion() {
-      const fecha = localStorage.getItem('ultimaVerificacion');
-      
-      if (!fecha) {
-        ultimaVerificacionSpan.textContent = 'Nunca';
-        return;
-      }
-
-      const d = new Date(fecha);
-      const ahora = new Date();
-      const diff = ahora - d;
-      
-      if (diff < 60000) {
-        ultimaVerificacionSpan.textContent = 'Hace unos segundos';
-      } else if (diff < 3600000) {
-        const minutos = Math.floor(diff / 60000);
-        ultimaVerificacionSpan.textContent = `Hace ${minutos} min`;
-      } else if (diff < 86400000) {
-        const horas = Math.floor(diff / 3600000);
-        ultimaVerificacionSpan.textContent = `Hace ${horas}h`;
-      } else {
-        ultimaVerificacionSpan.textContent = d.toLocaleDateString('es-EC', {
-          day: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-    }
-
-    // ==================== CONSULTA MANUAL ====================
-
-    async function consultarCurso(nrc) {
-      resultadoDiv.innerHTML = '<p class="loading">Cargando...</p>';
-
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nrc })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Error en la petición');
-        }
-
-        mostrarResultado(data);
-      } catch (error) {
-        resultadoDiv.innerHTML = `<div class="error">❌ ${error.message}</div>`;
-      }
-    }
-
-    function mostrarResultado(data) {
-      if (!data.success || data.totalCount === 0) {
-        resultadoDiv.innerHTML = '<div class="error">No se encontraron secciones válidas</div>';
-        return;
-      }
-
-      let html = `<h2>📊 Resultados (${data.totalCount} sección${data.totalCount > 1 ? 'es' : ''})</h2>`;
-
-      data.data.forEach((seccion) => {
-        const badgeClass = seccion.percentage >= 85 ? 'badge-success' : 
-                          seccion.percentage >= 70 ? 'badge-warning' : 'badge-danger';
-
-        html += `
-          <div class="seccion" style="border-left-color: ${seccion.percentage >= 85 ? '#4caf50' : seccion.percentage >= 70 ? '#ff9800' : '#f44336'}">
-            <h3>${seccion.sectionTitle}</h3>
-            <div class="info-item">
-              <span class="label">Materia:</span>
-              <span class="value">${seccion.subjectDesc}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Código:</span>
-              <span class="value">${seccion.subjectCode} ${seccion.courseNumber}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">NRC:</span>
-              <span class="value">${seccion.courseReferenceNumber}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Asistencia:</span>
-              <span class="value"><span class="badge ${badgeClass}">${seccion.percentage}%</span></span>
-            </div>
-            <div class="info-item">
-              <span class="label">Faltas:</span>
-              <span class="value">${seccion.missed}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Horario:</span>
-              <span class="value">${formatearHorario(seccion.time)}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Días:</span>
-              <span class="value">${formatearDias(seccion.schedule)}</span>
-            </div>
-          </div>
-        `;
-      });
-
-      resultadoDiv.innerHTML = html;
-    }
-
-    function formatearHorario(time) {
-      if (!time || time === '0000') return 'No especificado';
-      const horas = time.substring(0, 2);
-      const minutos = time.substring(2, 4);
-      return `${horas}:${minutos}`;
-    }
-
-    function formatearDias(schedule) {
-      const dias = ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'];
-      const diasActivos = schedule
-        .map((dia, index) => dia !== 'false' ? dias[index] : null)
-        .filter(dia => dia !== null);
-      
-      return diasActivos.length > 0 ? diasActivos.join(', ') : 'Sin horario';
-    }
-
-    // ==================== ACTUALIZACIÓN EN TIEMPO REAL ====================
-    setInterval(() => {
-      actualizarFechaVerificacion();
-      mostrarProximaVerificacion();
-    }, 60000); // Actualizar cada minuto
   </script>
 </body>
 </html>
