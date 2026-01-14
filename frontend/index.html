@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asistencia ESPE - Período Actual</title>
+  <title>Consultor de Asistencia ESPE</title>
   <style>
     * {
       margin: 0;
@@ -20,147 +20,82 @@
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1000px;
       margin: 0 auto;
       background: #16213e;
-      padding: 30px;
+      padding: 40px;
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       border: 1px solid #2d3561;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
     h1 {
       color: #4dd0e1;
-      font-size: 28px;
+      font-size: 32px;
+      margin-bottom: 10px;
+      text-align: center;
     }
 
-    .header-info {
+    .subtitulo {
+      color: #90a4ae;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 14px;
+    }
+
+    .form-group {
       display: flex;
-      gap: 20px;
-      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
       flex-wrap: wrap;
     }
 
-    .status-badge {
-      background: rgba(76, 208, 225, 0.2);
-      color: #4dd0e1;
-      padding: 10px 15px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid #4dd0e1;
-    }
-
-    .tiempo-actualizacion {
-      background: rgba(255, 152, 0, 0.2);
-      color: #ffb74d;
-      padding: 10px 15px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid #ff9800;
-    }
-
-    .tabla-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #0f1f35;
-      border: 1px solid #2d3561;
+    input {
+      flex: 1;
+      min-width: 200px;
+      padding: 14px 16px;
+      border: 2px solid #2d3561;
       border-radius: 8px;
-      overflow: hidden;
-    }
-
-    thead {
-      background: linear-gradient(135deg, #152a45 0%, #1a3555 100%);
-      border-bottom: 2px solid #4dd0e1;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    th {
-      padding: 18px 15px;
-      text-align: left;
-      color: #4dd0e1;
-      font-weight: 600;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    td {
-      padding: 15px;
-      border-bottom: 1px solid #2d3561;
+      font-size: 16px;
+      background: #0f1f35;
       color: #e0e0e0;
-      font-size: 14px;
+      transition: all 0.3s;
     }
 
-    tbody tr {
-      transition: all 0.2s;
+    input::placeholder {
+      color: #666;
     }
 
-    tbody tr:hover {
-      background: rgba(77, 208, 225, 0.1);
+    input:focus {
+      outline: none;
+      border-color: #4dd0e1;
+      box-shadow: 0 0 8px rgba(77, 208, 225, 0.3);
     }
 
-    .asistencia-alta {
-      color: #81c784;
-      font-weight: 600;
-    }
-
-    .asistencia-media {
-      color: #ffb74d;
-      font-weight: 600;
-    }
-
-    .asistencia-baja {
-      color: #ff7070;
-      font-weight: 600;
-    }
-
-    .btn-monitorear {
-      background: #4dd0e1;
+    button {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
       color: #0f1f35;
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 600;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      width: 100%;
-      max-width: 130px;
+      white-space: nowrap;
     }
 
-    .btn-monitorear:hover {
-      background: #26c6da;
-      transform: scale(1.05);
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
     }
 
-    .btn-monitorear:active {
-      transform: scale(0.95);
+    button:active {
+      transform: translateY(0);
     }
 
-    .btn-monitorear.agregado {
-      background: #81c784;
-      cursor: default;
-    }
-
-    .btn-monitorear.agregado:hover {
-      transform: none;
+    #resultado {
+      margin-top: 30px;
     }
 
     .loading {
@@ -176,307 +111,143 @@
       padding: 20px;
       border-radius: 8px;
       border-left: 4px solid #f44336;
-      text-align: center;
+      margin-bottom: 15px;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: linear-gradient(135deg, #0d1a3a 0%, #1a2d4a 100%);
+    .seccion {
+      background: #0f1f35;
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      border-left: 4px solid #4dd0e1;
       border: 1px solid #2d3561;
-      text-align: center;
+      border-left: 4px solid #4dd0e1;
     }
 
-    .stat-number {
-      font-size: 24px;
-      font-weight: 700;
+    .seccion h3 {
       color: #4dd0e1;
-      margin-bottom: 5px;
+      margin-bottom: 15px;
+      font-size: 18px;
     }
 
-    .stat-label {
-      font-size: 12px;
-      color: #90a4ae;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 10px;
     }
 
-    .controles {
+    .info-item {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #2d3561;
     }
 
-    button.btn-principal {
-      background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
-      color: #0f1f35;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #90a4ae;
+    }
+
+    .value {
+      color: #e0e0e0;
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
       font-size: 14px;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: auto;
     }
 
-    button.btn-principal:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
+    .badge-success {
+      background: rgba(76, 175, 80, 0.3);
+      color: #81c784;
     }
 
-    button.btn-principal:active {
-      transform: translateY(0);
+    .badge-warning {
+      background: rgba(255, 152, 0, 0.3);
+      color: #ffb74d;
     }
 
-    @media (max-width: 768px) {
+    .badge-danger {
+      background: rgba(244, 67, 54, 0.3);
+      color: #ff7070;
+    }
+
+    .titulo-resultado {
+      color: #4dd0e1;
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #4dd0e1;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    @media (max-width: 600px) {
       .container {
         padding: 20px;
       }
 
       h1 {
-        font-size: 22px;
+        font-size: 24px;
       }
 
-      .header {
+      .form-group {
         flex-direction: column;
-        align-items: flex-start;
       }
 
-      .header-info {
-        width: 100%;
+      input {
+        min-width: unset;
       }
 
-      table {
-        font-size: 12px;
-      }
-
-      th, td {
-        padding: 10px 8px;
-      }
-
-      .btn-monitorear {
-        max-width: 100%;
-      }
-
-      .stats {
+      .info-row {
         grid-template-columns: 1fr;
-      }
-
-      .controles {
-        flex-direction: column;
-      }
-
-      button.btn-principal {
-        width: 100%;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>📚 Asistencia ESPE - Período Actual</h1>
-      <div class="header-info">
-        <div class="status-badge" id="status-badge">🔐 Inicia sesión</div>
-        <div class="tiempo-actualizacion" id="tiempo-proxima">--:--</div>
-      </div>
+    <h1>📚 Consultor de Asistencia</h1>
+    <p class="subtitulo">Busca tu NRC y obtén información detallada</p>
+
+    <div class="form-group">
+      <input type="text" id="nrc-input" placeholder="Ingresa el NRC..." maxlength="10">
+      <button onclick="buscarNRC()">🔍 Buscar</button>
     </div>
 
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number" id="total-cursos">0</div>
-        <div class="stat-label">Total de Cursos</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="cursos-buenos" style="color: #81c784;">0</div>
-        <div class="stat-label">Buena Asistencia (≥85%)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="cursos-riesgo" style="color: #ffb74d;">0</div>
-        <div class="stat-label">En Riesgo (70-85%)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="cursos-criticos" style="color: #ff7070;">0</div>
-        <div class="stat-label">Crítico (<70%)</div>
-      </div>
-    </div>
-
-    <!-- PANEL DE LOGIN -->
-    <div id="login-panel" style="display: none; margin-bottom: 30px;">
-      <div style="background: rgba(76, 208, 225, 0.1); padding: 20px; border-radius: 12px; border-left: 4px solid #4dd0e1;">
-        <h2 style="margin-bottom: 15px; color: #4dd0e1;">🔐 Login ESPE</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; flex-wrap: wrap;">
-          <input type="text" id="usuario-input" placeholder="Usuario ESPE..." style="padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
-          <input type="password" id="contrasena-input" placeholder="Contraseña..." style="padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
-          <button class="btn-principal" onclick="hacerLogin()" style="width: 100%;">Ingresar</button>
-        </div>
-        <p style="margin-top: 10px; font-size: 12px; color: #90a4ae;">💡 Tu contraseña solo se usa para autenticarte con ESPE, nunca se almacena</p>
-      </div>
-    </div>
-
-    <!-- PANEL DE CURSOS (oculto hasta login) -->
-    <div id="cursos-panel" style="display: none;">
-
-    <div class="controles">
-      <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-        <input type="text" id="nrc-input" placeholder="Ingresa NRC..." style="flex: 1; min-width: 150px; padding: 12px; border-radius: 8px; border: 1px solid #2d3561; background: #0f1f35; color: #e0e0e0; font-size: 14px;">
-        <button class="btn-principal" onclick="agregarCurso()">➕ Agregar</button>
-      </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;">
-        <button class="btn-principal" onclick="actualizarAhora()" style="flex: 1;">🔄 Actualizar Ahora</button>
-        <button class="btn-principal" onclick="limpiarTodos()" style="flex: 1;">🗑️ Limpiar Todo</button>
-        <button class="btn-principal" onclick="cerrarSesion()" style="flex: 1; background: #ff7070;">🚪 Cerrar Sesión</button>
-      </div>
-    </div>
-
-    <div class="tabla-container">
-      <div id="contenido"></div>
-    </div>
-    </div>
+    <div id="resultado"></div>
   </div>
 
   <script>
     const BACKEND_URL = 'https://cooperative-tierney-losmascapitos-480b8f15.koyeb.app';
-    const INTERVALO_ACTUALIZACION = 60 * 60 * 1000; // 1 hora
-    const LIMITE_ASISTENCIA = 85;
 
-    let cursosAgregados = [];
-    let usuarioAutenticado = false;
-
-    // ==================== INICIALIZACIÓN ====================
-    document.addEventListener('DOMContentLoaded', () => {
-      mostrarPanelLogin();
-      cargarCursosGuardados();
-      
-      // Enter key en los inputs
-      document.getElementById('usuario-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') document.getElementById('contrasena-input').focus();
-      });
-      document.getElementById('contrasena-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') hacerLogin();
-      });
-      document.getElementById('nrc-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') agregarCurso();
-      });
+    // Permitir búsqueda con Enter
+    document.getElementById('nrc-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') buscarNRC();
     });
 
-    // ==================== GESTIÓN DE SESIÓN ====================
-    function mostrarPanelLogin() {
-      document.getElementById('login-panel').style.display = 'block';
-      document.getElementById('cursos-panel').style.display = 'none';
-      usuarioAutenticado = false;
-      actualizarStatusBadge();
-    }
-
-    function mostrarPanelCursos() {
-      document.getElementById('login-panel').style.display = 'none';
-      document.getElementById('cursos-panel').style.display = 'block';
-      usuarioAutenticado = true;
-      actualizarStatusBadge();
-      mostrarTabla();
-      iniciarActualizacionAutomatica();
-    }
-
-    function actualizarStatusBadge() {
-      const badge = document.getElementById('status-badge');
-      if (usuarioAutenticado) {
-        badge.textContent = '✅ Sesión activa';
-        badge.style.background = 'rgba(129, 199, 132, 0.2)';
-        badge.style.borderColor = '#81c784';
-        badge.style.color = '#81c784';
-      } else {
-        badge.textContent = '🔐 Inicia sesión';
-        badge.style.background = 'rgba(76, 208, 225, 0.2)';
-        badge.style.borderColor = '#4dd0e1';
-        badge.style.color = '#4dd0e1';
-      }
-    }
-
-    async function hacerLogin() {
-      const usuario = document.getElementById('usuario-input').value.trim();
-      const contrasena = document.getElementById('contrasena-input').value.trim();
-
-      if (!usuario || !contrasena) {
-        alert('⚠️ Ingresa usuario y contraseña');
-        return;
-      }
-
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario, contrasena })
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-          alert('❌ ' + data.error);
-          return;
-        }
-
-        alert('✅ Login exitoso');
-        document.getElementById('usuario-input').value = '';
-        document.getElementById('contrasena-input').value = '';
-        mostrarPanelCursos();
-      } catch (error) {
-        alert('❌ Error: ' + error.message);
-      }
-    }
-
-    function cerrarSesion() {
-      if (confirm('¿Cerrar sesión?')) {
-        usuarioAutenticado = false;
-        cursosAgregados = [];
-        localStorage.removeItem('cursosAgregados');
-        mostrarPanelLogin();
-      }
-    }
-
-    // ==================== CARGAR CURSOS GUARDADOS ====================
-    function cargarCursosGuardados() {
-      const guardados = localStorage.getItem('cursosAgregados');
-      if (guardados) {
-        cursosAgregados = JSON.parse(guardados);
-      }
-    }
-
-    function guardarCursos() {
-      localStorage.setItem('cursosAgregados', JSON.stringify(cursosAgregados));
-    }
-
-    // ==================== AGREGAR CURSO ====================
-    async function agregarCurso() {
-      if (!usuarioAutenticado) {
-        alert('❌ Debes iniciar sesión primero');
-        return;
-      }
-
-      const input = document.getElementById('nrc-input');
-      const nrc = input.value.trim().toUpperCase();
+    async function buscarNRC() {
+      const nrc = document.getElementById('nrc-input').value.trim();
 
       if (!nrc) {
-        alert('⚠️ Ingresa un NRC');
+        mostrarError('⚠️ Ingresa un NRC');
         return;
       }
 
-      if (cursosAgregados.some(c => c.nrc === nrc)) {
-        alert('❌ Este NRC ya está agregado');
-        input.value = '';
-        return;
-      }
-
-      const contenido = document.getElementById('contenido');
-      contenido.innerHTML = '<div class="loading">🔍 Buscando curso...</div>';
+      const resultado = document.getElementById('resultado');
+      resultado.innerHTML = '<div class="loading">🔍 Buscando...</div>';
 
       try {
         const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
@@ -487,226 +258,118 @@
 
         const data = await response.json();
 
-        if (!data.success || data.totalCount === 0) {
-          alert('❌ No se encontró ese NRC');
-          mostrarTabla();
+        if (!data.success || !data.data || data.data.length === 0) {
+          mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}`);
           return;
         }
 
-        const curso = data.data[0];
-        cursosAgregados.push({
-          nrc: nrc,
-          codigo: curso.subjectCode,
-          nombre: curso.subjectDesc,
-          percentage: curso.percentage,
-          missed: curso.missed,
-          ultima_actualizacion: new Date().toISOString()
-        });
-
-        guardarCursos();
-        input.value = '';
-        alert('✅ Curso agregado');
-        actualizarTodosCursos();
+        mostrarResultados(data.data);
       } catch (error) {
-        alert(`❌ Error: ${error.message}`);
-        mostrarTabla();
+        mostrarError(`❌ Error: ${error.message}`);
       }
     }
 
-    // ==================== ACTUALIZAR TODOS LOS CURSOS ====================
-    async function actualizarTodosCursos() {
-      if (cursosAgregados.length === 0) {
-        mostrarTabla();
-        return;
-      }
-
-      const contenido = document.getElementById('contenido');
-      contenido.innerHTML = '<div class="loading">📡 Actualizando cursos...</div>';
-
-      const cursosActualizados = [];
-      let errores = 0;
-
-      for (const curso of cursosAgregados) {
-        try {
-          const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nrc: curso.nrc })
-          });
-
-          const data = await response.json();
-
-          if (data.success && data.totalCount > 0) {
-            const datoCurso = data.data[0];
-            cursosActualizados.push({
-              ...curso,
-              percentage: datoCurso.percentage,
-              missed: datoCurso.missed,
-              ultima_actualizacion: new Date().toISOString()
-            });
-          } else {
-            errores++;
-            cursosActualizados.push({
-              ...curso,
-              error: true,
-              errorMsg: data.error || 'Error desconocido'
-            });
-          }
-        } catch (error) {
-          errores++;
-          cursosActualizados.push({
-            ...curso,
-            error: true,
-            errorMsg: error.message
-          });
-        }
-      }
-
-      cursosAgregados = cursosActualizados;
-      guardarCursos();
-      generarTabla();
-
-      if (errores > 0) {
-        console.warn(`⚠️ ${errores} cursos con error`);
-      }
+    function mostrarError(mensaje) {
+      document.getElementById('resultado').innerHTML = `<div class="error">${mensaje}</div>`;
     }
 
-    function mostrarTabla() {
-      if (cursosAgregados.length === 0) {
-        document.getElementById('contenido').innerHTML = '<div class="loading">👉 Agrega un NRC para comenzar</div>';
-        actualizarEstadisticas([]);
-        return;
-      }
-      generarTabla();
-    }
+    function mostrarResultados(secciones) {
+      let html = `<h2>📊 Resultados (${secciones.length} sección${secciones.length > 1 ? 'es' : ''})</h2>`;
 
-    function generarTabla() {
-      const contenido = document.getElementById('contenido');
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nombre de la Materia</th>
-              <th>NRC</th>
-              <th style="text-align: center;">Asistencia</th>
-              <th style="text-align: center;">Faltas</th>
-              <th style="text-align: center;">Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      cursosAgregados.forEach((curso) => {
-        if (curso.error) {
-          html += `
-            <tr style="opacity: 0.6;">
-              <td><strong>${curso.codigo}</strong></td>
-              <td>${curso.nombre}</td>
-              <td><strong>${curso.nrc}</strong></td>
-              <td colspan="2" style="text-align: center; color: #ff7070;">❌ ${curso.errorMsg}</td>
-              <td style="text-align: center;">
-                <button class="btn-monitorear" onclick="eliminarCurso('${curso.nrc}')" style="background: #ff7070;">🗑️ Eliminar</button>
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        const claseAsistencia = curso.percentage >= LIMITE_ASISTENCIA ? 'asistencia-alta' : 
-                               curso.percentage >= 70 ? 'asistencia-media' : 'asistencia-baja';
+      secciones.forEach((seccion) => {
+        const badgeClass = seccion.percentage >= 85 ? 'badge-success' : 
+                          seccion.percentage >= 70 ? 'badge-warning' : 'badge-danger';
         
-        const icon = curso.percentage >= LIMITE_ASISTENCIA ? '✅' : curso.percentage >= 70 ? '⚠️' : '🚨';
+        const icon = seccion.percentage >= 85 ? '✅' : 
+                    seccion.percentage >= 70 ? '⚠️' : '🚨';
+
+        const horario = formatearHorario(seccion.time);
+        const dias = formatearDias(seccion.schedule);
 
         html += `
-          <tr>
-            <td><strong>${curso.codigo}</strong></td>
-            <td>${curso.nombre}</td>
-            <td><strong>${curso.nrc}</strong></td>
-            <td style="text-align: center;"><span class="${claseAsistencia}">${icon} ${curso.percentage}%</span></td>
-            <td style="text-align: center;">${curso.missed}</td>
-            <td style="text-align: center;">
-              <button class="btn-monitorear" onclick="eliminarCurso('${curso.nrc}')" style="background: #ff7070;">🗑️ Eliminar</button>
-            </td>
-          </tr>
+          <div class="seccion" style="border-left-color: ${seccion.percentage >= 85 ? '#81c784' : seccion.percentage >= 70 ? '#ffb74d' : '#ff7070'};">
+            <h3>${icon} ${seccion.sectionTitle}</h3>
+            
+            <div class="info-row">
+              <div>
+                <div class="info-item">
+                  <span class="label">Materia:</span>
+                  <span class="value">${seccion.subjectDesc}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Código:</span>
+                  <span class="value">${seccion.subjectCode} ${seccion.courseNumber}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">NRC:</span>
+                  <span class="value"><strong>${seccion.courseReferenceNumber}</strong></span>
+                </div>
+              </div>
+              
+              <div>
+                <div class="info-item">
+                  <span class="label">Horario:</span>
+                  <span class="value">${horario}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Días:</span>
+                  <span class="value">${dias}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Período:</span>
+                  <span class="value">${seccion.termCode}</span>
+                </div>
+              </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #2d3561; margin: 15px 0;">
+
+            <div class="info-row">
+              <div class="info-item" style="border: none;">
+                <span class="label">Asistencia:</span>
+                <span class="value"><span class="badge ${badgeClass}">${seccion.percentage}%</span></span>
+              </div>
+              <div class="info-item" style="border: none;">
+                <span class="label">Faltas:</span>
+                <span class="value" style="font-weight: 600; font-size: 16px;">${seccion.missed}</span>
+              </div>
+            </div>
+          </div>
         `;
       });
 
-      html += `
-          </tbody>
-        </table>
-      `;
-
-      contenido.innerHTML = html;
-      actualizarEstadisticas(cursosAgregados);
+      document.getElementById('resultado').innerHTML = html;
     }
 
-    // ==================== ELIMINAR CURSO ====================
-    function eliminarCurso(nrc) {
-      if (confirm(`¿Eliminar este curso?`)) {
-        cursosAgregados = cursosAgregados.filter(c => c.nrc !== nrc);
-        guardarCursos();
-        alert('✅ Curso eliminado');
-        mostrarTabla();
-      }
+    function formatearHorario(time) {
+      if (!time || time === '0000') return 'No especificado';
+      const horas = time.substring(0, 2);
+      const minutos = time.substring(2, 4);
+      return `${horas}:${minutos}`;
     }
 
-    function limpiarTodos() {
-      if (confirm('¿Eliminar TODOS los cursos?')) {
-        cursosAgregados = [];
-        guardarCursos();
-        alert('✅ Todo limpiado');
-        mostrarTabla();
-      }
-    }
+    function formatearDias(schedule) {
+      const diasNombres = {
+        'D': 'Domingo',
+        'L': 'Lunes',
+        'M': 'Martes',
+        'Mi': 'Miércoles',
+        'J': 'Jueves',
+        'V': 'Viernes',
+        'S': 'Sábado'
+      };
 
-    // ==================== ESTADÍSTICAS ====================
-    function actualizarEstadisticas(cursos) {
-      const total = cursos.length;
-      const buenos = cursos.filter(c => !c.error && c.percentage >= LIMITE_ASISTENCIA).length;
-      const riesgo = cursos.filter(c => !c.error && c.percentage >= 70 && c.percentage < LIMITE_ASISTENCIA).length;
-      const criticos = cursos.filter(c => !c.error && c.percentage < 70).length;
+      const dias = ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'];
+      const diasActivos = [];
 
-      document.getElementById('total-cursos').textContent = total;
-      document.getElementById('cursos-buenos').textContent = buenos;
-      document.getElementById('cursos-riesgo').textContent = riesgo;
-      document.getElementById('cursos-criticos').textContent = criticos;
-    }
-
-    // ==================== ACTUALIZACIÓN AUTOMÁTICA ====================
-    let intervaloActualizacion = null;
-
-    function iniciarActualizacionAutomatica() {
-      // Actualizar cada hora
-      if (intervaloActualizacion) clearInterval(intervaloActualizacion);
-      
-      intervaloActualizacion = setInterval(() => {
-        if (usuarioAutenticado) {
-          console.log('🔄 Actualizando cursos automáticamente...');
-          actualizarTodosCursos();
+      schedule.forEach((dia, index) => {
+        if (dia !== 'false' && dia !== 'False') {
+          diasActivos.push(dias[index]);
         }
-      }, INTERVALO_ACTUALIZACION);
+      });
 
-      actualizarTiempoProximo();
-      setInterval(actualizarTiempoProximo, 60000); // Actualizar cada minuto
-    }
-
-    function actualizarTiempoProximo() {
-      const ahora = new Date();
-      const proximaHora = new Date(ahora);
-      proximaHora.setHours(proximaHora.getHours() + 1);
-      proximaHora.setMinutes(0);
-      proximaHora.setSeconds(0);
-
-      const horas = String(proximaHora.getHours()).padStart(2, '0');
-      const minutos = String(proximaHora.getMinutes()).padStart(2, '0');
-
-      document.getElementById('tiempo-proxima').textContent = `Próxima: ${horas}:${minutos}`;
-    }
-
-    async function actualizarAhora() {
-      await actualizarTodosCursos();
+      if (diasActivos.length === 0) return 'Sin horario definido';
+      return diasActivos.join(', ');
     }
   </script>
 </body>
