@@ -85,13 +85,18 @@
       white-space: nowrap;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
     }
 
-    button:active {
+    button:active:not(:disabled) {
       transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #resultado {
@@ -105,6 +110,17 @@
       font-size: 18px;
     }
 
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
     .error {
       background: rgba(244, 67, 54, 0.2);
       color: #ff7070;
@@ -112,6 +128,7 @@
       border-radius: 8px;
       border-left: 4px solid #f44336;
       margin-bottom: 15px;
+      white-space: pre-line;
     }
 
     .seccion {
@@ -119,9 +136,13 @@
       padding: 20px;
       border-radius: 10px;
       margin-bottom: 15px;
-      border-left: 4px solid #4dd0e1;
       border: 1px solid #2d3561;
       border-left: 4px solid #4dd0e1;
+      transition: transform 0.2s;
+    }
+
+    .seccion:hover {
+      transform: translateY(-2px);
     }
 
     .seccion h3 {
@@ -169,29 +190,55 @@
     .badge-success {
       background: rgba(76, 175, 80, 0.3);
       color: #81c784;
+      border: 1px solid #81c784;
     }
 
     .badge-warning {
       background: rgba(255, 152, 0, 0.3);
       color: #ffb74d;
+      border: 1px solid #ffb74d;
     }
 
     .badge-danger {
       background: rgba(244, 67, 54, 0.3);
       color: #ff7070;
-    }
-
-    .titulo-resultado {
-      color: #4dd0e1;
-      font-size: 24px;
-      margin-bottom: 20px;
-      text-align: center;
+      border: 1px solid #ff7070;
     }
 
     h2 {
       color: #4dd0e1;
       margin-bottom: 15px;
       font-size: 20px;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #90a4ae;
+      font-size: 16px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #2d3561;
+      margin: 15px 0;
+    }
+
+    .estado-servidor {
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      background: rgba(77, 208, 225, 0.1);
+      color: #4dd0e1;
+      border: 1px solid rgba(77, 208, 225, 0.3);
+    }
+
+    .estado-servidor.error {
+      background: rgba(244, 67, 54, 0.1);
+      color: #ff7070;
+      border: 1px solid rgba(244, 67, 54, 0.3);
     }
 
     @media (max-width: 600px) {
@@ -220,11 +267,20 @@
 <body>
   <div class="container">
     <h1>📚 Consultor de Asistencia</h1>
-    <p class="subtitulo">Busca tu NRC y obtén información detallada</p>
+    <p class="subtitulo">Sistema de Consulta ESPE - Busca tu NRC</p>
+
+    <div id="estado-servidor"></div>
 
     <div class="form-group">
-      <input type="text" id="nrc-input" placeholder="Ingresa el NRC..." maxlength="10">
-      <button onclick="buscarNRC()">🔍 Buscar</button>
+      <input 
+        type="text" 
+        id="nrc-input" 
+        placeholder="Ingresa el NRC (ej: 28423)..." 
+        maxlength="10"
+        pattern="[0-9]*"
+        inputmode="numeric"
+      >
+      <button id="buscar-btn" onclick="buscarNRC()">🔍 Buscar</button>
     </div>
 
     <div id="resultado"></div>
@@ -232,50 +288,122 @@
 
   <script>
     const BACKEND_URL = 'https://basic-danella-losmascapitos-3aba29df.koyeb.app';
+    let buscando = false;
+
+    // Verificar estado del servidor al cargar
+    window.addEventListener('load', verificarServidor);
 
     // Permitir búsqueda con Enter
     document.getElementById('nrc-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') buscarNRC();
+      if (e.key === 'Enter' && !buscando) buscarNRC();
     });
 
-    async function buscarNRC() {
-      const nrc = document.getElementById('nrc-input').value.trim();
+    // Solo permitir números en el input
+    document.getElementById('nrc-input').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
 
+    async function verificarServidor() {
+      const estadoDiv = document.getElementById('estado-servidor');
+      try {
+        const response = await fetch(`${BACKEND_URL}/health`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          estadoDiv.innerHTML = '✅ Servidor conectado y listo';
+          estadoDiv.className = 'estado-servidor';
+        } else {
+          estadoDiv.innerHTML = '⚠️ Servidor respondió con error';
+          estadoDiv.className = 'estado-servidor error';
+        }
+      } catch (error) {
+        estadoDiv.innerHTML = '🔴 No se pudo conectar al servidor';
+        estadoDiv.className = 'estado-servidor error';
+      }
+    }
+
+    async function buscarNRC() {
+      if (buscando) return;
+
+      const nrc = document.getElementById('nrc-input').value.trim();
+      const boton = document.getElementById('buscar-btn');
+
+      // Validaciones
       if (!nrc) {
-        mostrarError('⚠️ Ingresa un NRC válido');
+        mostrarError('⚠️ Por favor ingresa un NRC');
+        return;
+      }
+
+      if (!/^\d+$/.test(nrc)) {
+        mostrarError('⚠️ El NRC debe contener solo números');
         return;
       }
 
       if (nrc.length < 4) {
-        mostrarError('⚠️ El NRC debe tener al menos 4 caracteres');
+        mostrarError('⚠️ El NRC debe tener al menos 4 dígitos');
         return;
       }
 
+      // Mostrar loading
+      buscando = true;
+      boton.disabled = true;
+      boton.textContent = '⏳ Buscando...';
+      
       const resultado = document.getElementById('resultado');
-      resultado.innerHTML = '<div class="loading">🔍 Buscando en ESPE...</div>';
+      resultado.innerHTML = '<div class="loading">🔍 Consultando en ESPE</div>';
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
         const response = await fetch(`${BACKEND_URL}/api/consultar-curso`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nrc: nrc.toUpperCase() })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ nrc: nrc }),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+          throw new Error(errorData.error || `Error ${response.status}`);
+        }
 
         const data = await response.json();
 
         if (!data.success) {
-          mostrarError(`❌ ${data.error}\n\n💡 Verifica que el NRC sea correcto o intenta de nuevo más tarde.`);
+          mostrarError(`❌ ${data.error || 'Error desconocido'}\n\n💡 Verifica que el NRC sea correcto.`);
           return;
         }
 
-        if (!data.data || data.data.length === 0) {
-          mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}\n\n💡 Verifica que el NRC sea correcto.`);
+        if (!data.secciones || data.secciones.length === 0) {
+          mostrarError(`❌ No se encontraron resultados para el NRC: ${nrc}\n\n💡 Posibles causas:\n• El NRC no existe en el sistema\n• No tienes asignaturas con ese NRC\n• El NRC pertenece a otro período`);
           return;
         }
 
-        mostrarResultados(data.data);
+        mostrarResultados(data);
+
       } catch (error) {
-        mostrarError(`❌ Error de conexión: ${error.message}\n\n💡 Verifica tu conexión a internet.`);
+        console.error('Error:', error);
+        
+        if (error.name === 'AbortError') {
+          mostrarError('❌ La solicitud tardó demasiado\n\n💡 Intenta de nuevo en unos momentos.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          mostrarError('❌ Error de conexión\n\n💡 Posibles soluciones:\n• Verifica tu conexión a internet\n• El servidor puede estar temporalmente inactivo\n• Intenta recargar la página');
+        } else {
+          mostrarError(`❌ Error: ${error.message}\n\n💡 Si el problema persiste, contacta al administrador.`);
+        }
+      } finally {
+        buscando = false;
+        boton.disabled = false;
+        boton.textContent = '🔍 Buscar';
       }
     }
 
@@ -283,65 +411,68 @@
       document.getElementById('resultado').innerHTML = `<div class="error">${mensaje}</div>`;
     }
 
-    function mostrarResultados(secciones) {
-      let html = `<h2>📊 Resultados (${secciones.length} sección${secciones.length > 1 ? 'es' : ''})</h2>`;
+    function mostrarResultados(data) {
+      const secciones = data.secciones;
+      
+      let html = `<h2>📊 Resultados encontrados: ${data.totalSecciones} sección${data.totalSecciones > 1 ? 'es' : ''}</h2>`;
 
       secciones.forEach((seccion) => {
-        const badgeClass = seccion.percentage >= 85 ? 'badge-success' : 
-                          seccion.percentage >= 70 ? 'badge-warning' : 'badge-danger';
+        const porcentaje = seccion.porcentajeAsistencia || 0;
+        const badgeClass = porcentaje >= 85 ? 'badge-success' : 
+                          porcentaje >= 70 ? 'badge-warning' : 'badge-danger';
         
-        const icon = seccion.percentage >= 85 ? '✅' : 
-                    seccion.percentage >= 70 ? '⚠️' : '🚨';
+        const icon = porcentaje >= 85 ? '✅' : 
+                    porcentaje >= 70 ? '⚠️' : '🚨';
 
-        const horario = formatearHorario(seccion.time);
-        const dias = formatearDias(seccion.schedule);
+        const colorBorde = porcentaje >= 85 ? '#81c784' : 
+                          porcentaje >= 70 ? '#ffb74d' : '#ff7070';
 
         html += `
-          <div class="seccion" style="border-left-color: ${seccion.percentage >= 85 ? '#81c784' : seccion.percentage >= 70 ? '#ffb74d' : '#ff7070'};">
-            <h3>${icon} ${seccion.sectionTitle}</h3>
+          <div class="seccion" style="border-left-color: ${colorBorde};">
+            <h3>${icon} ${seccion.titulo}</h3>
             
             <div class="info-row">
               <div>
                 <div class="info-item">
                   <span class="label">Materia:</span>
-                  <span class="value">${seccion.subjectDesc}</span>
+                  <span class="value">${seccion.materia}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">Código:</span>
-                  <span class="value">${seccion.subjectCode} ${seccion.courseNumber}</span>
+                  <span class="value">${seccion.codigoMateria} ${seccion.codigo}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">NRC:</span>
-                  <span class="value"><strong>${seccion.courseReferenceNumber}</strong></span>
+                  <span class="value"><strong>${seccion.nrc}</strong></span>
                 </div>
               </div>
               
               <div>
                 <div class="info-item">
                   <span class="label">Horario:</span>
-                  <span class="value">${horario}</span>
+                  <span class="value">${seccion.horario || 'No especificado'}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">Días:</span>
-                  <span class="value">${dias}</span>
+                  <span class="value">${seccion.diasSemana}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">Período:</span>
-                  <span class="value">${seccion.termCode}</span>
+                  <span class="value">${seccion.termino}</span>
                 </div>
               </div>
             </div>
 
-            <hr style="border: none; border-top: 1px solid #2d3561; margin: 15px 0;">
+            <hr>
 
             <div class="info-row">
               <div class="info-item" style="border: none;">
-                <span class="label">Asistencia:</span>
-                <span class="value"><span class="badge ${badgeClass}">${seccion.percentage}%</span></span>
+                <span class="label">📊 Asistencia:</span>
+                <span class="value"><span class="badge ${badgeClass}">${porcentaje}%</span></span>
               </div>
               <div class="info-item" style="border: none;">
-                <span class="label">Faltas:</span>
-                <span class="value" style="font-weight: 600; font-size: 16px;">${seccion.missed}</span>
+                <span class="label">❌ Faltas:</span>
+                <span class="value" style="font-weight: 600; font-size: 18px; color: ${seccion.faltas > 0 ? '#ff7070' : '#81c784'};">${seccion.faltas}</span>
               </div>
             </div>
           </div>
@@ -349,37 +480,6 @@
       });
 
       document.getElementById('resultado').innerHTML = html;
-    }
-
-    function formatearHorario(time) {
-      if (!time || time === '0000') return 'No especificado';
-      const horas = time.substring(0, 2);
-      const minutos = time.substring(2, 4);
-      return `${horas}:${minutos}`;
-    }
-
-    function formatearDias(schedule) {
-      const diasNombres = {
-        'D': 'Domingo',
-        'L': 'Lunes',
-        'M': 'Martes',
-        'Mi': 'Miércoles',
-        'J': 'Jueves',
-        'V': 'Viernes',
-        'S': 'Sábado'
-      };
-
-      const dias = ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'];
-      const diasActivos = [];
-
-      schedule.forEach((dia, index) => {
-        if (dia !== 'false' && dia !== 'False') {
-          diasActivos.push(dias[index]);
-        }
-      });
-
-      if (diasActivos.length === 0) return 'Sin horario definido';
-      return diasActivos.join(', ');
     }
   </script>
 </body>
